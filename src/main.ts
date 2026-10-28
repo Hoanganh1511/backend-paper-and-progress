@@ -8,6 +8,7 @@ async function bootstrap() {
   app.enableCors({
     origin: configService.get<string[]>('CORS_ORIGINS'),
     credentials: true,
+    exposedHeaders: ['Retry-After'],
   });
 
   const swaggerConfig = new DocumentBuilder()

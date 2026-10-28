@@ -33,7 +33,7 @@ export class RegisterCommand {
           firstName,
           lastName,
           enabled: true,
-          emailVerified: true,
+          emailVerified: false,
           credentials: [
             {
               type: 'password',
@@ -67,15 +67,15 @@ export class RegisterCommand {
 
     // 4. Send email confirm
     if (users.length > 0) {
-      //       try {
-      //         await axios.put(
-      //           `${baseUrl}/admin/realms/${realm}/users/${users[0].id}/send-verify-email`,
-      //           {},
-      //           { headers: { Authorization: `Bearer ${adminToken}` } },
-      //         );
-      //       } catch {
-      //         // SMTP not configured yet — skip email verification in dev
-      //       }
+      try {
+        await axios.put(
+          `${baseUrl}/admin/realms/${realm}/users/${users[0].id}/send-verify-email`,
+          {},
+          { headers: { Authorization: `Bearer ${adminToken}` } },
+        );
+      } catch {
+        // SMTP not configured yet — skip email verification in dev
+      }
     }
 
     return {

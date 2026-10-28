@@ -3,10 +3,12 @@ import {
   Post,
   Get,
   Body,
+  HttpCode,
   UseGuards,
   Request,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../../../shared/guards/jwt-auth.guard.js';
 import { SyncUserCommand } from '../../application/commands/sync-user.command.js';
 import {
@@ -25,6 +27,13 @@ import {
   LogoutCommand,
   LogoutDto,
 } from '../../application/commands/logout.command.js';
+import {
+  ForgotPasswordCommand,
+  ForgotPasswordDto,
+} from '../../application/commands/forgot-password.command.js';
+
+// 5 requests / 60s per IP (ttl is in milliseconds)
+const AUTH_THROTTLE = { limit: 5, ttl: 60_000 };
 
 @Controller('api/v1/auth')
 export class AuthController {
@@ -34,9 +43,11 @@ export class AuthController {
     private registerCommand: RegisterCommand,
     private refreshTokenCommand: RefreshTokenCommand,
     private logoutCommand: LogoutCommand,
+    private forgotPasswordCommand: ForgotPasswordCommand,
   ) {}
 
   @Post('login')
+  @Throttle({ default: AUTH_THROTTLE })
   async login(@Body() dto: LoginDto) {
     try {
       return await this.loginCommand.execute(dto);
@@ -49,6 +60,7 @@ export class AuthController {
   }
 
   @Post('register')
+  @Throttle({ default: AUTH_THROTTLE })
   async register(@Body() dto: RegisterDto) {
     return this.registerCommand.execute(dto);
   }
@@ -61,6 +73,13 @@ export class AuthController {
   @Post('logout')
   async logout(@Body() dto: LogoutDto) {
     return this.logoutCommand.execute(dto);
+  }
+
+  @Post('forgot-password')
+  @Throttle({ default: { limit: 3, ttl: 120_000 } })
+  @HttpCode(200)
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.forgotPasswordCommand.execute(dto);
   }
 
   @Get('me')
