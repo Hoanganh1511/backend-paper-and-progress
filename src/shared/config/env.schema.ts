@@ -5,8 +5,8 @@ export const envSchema = z.object({
     .enum(['development', 'production', 'test'])
     .default('development'),
   PORT: z.coerce.number().default(3000),
-  APP_URL: z.string().url().default('http://localhost:3000'),
-  FRONTEND_URL: z.string().url().default('http://localhost:4000'),
+  APP_URL: z.string().url().default('http://localhost:8000'),
+  FRONTEND_URL: z.string().url().default('http://localhost:3000'),
 
   DATABASE_URL: z.string().startsWith('postgresql://'),
 
@@ -29,7 +29,7 @@ export const envSchema = z.object({
 
   CORS_ORIGINS: z
     .string()
-    .default('http://localhost:4000')
+    .default('http://localhost:3000')
     .transform((s: string) => s.split(',')),
 });
 
