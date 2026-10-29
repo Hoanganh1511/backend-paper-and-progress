@@ -23,12 +23,27 @@ import { RefreshTokenDto } from './dtos/refresh-token.dto.js';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto.js';
 import { ResetPasswordDto } from './dtos/reset-password.dto.js';
 import type { SocialProfile } from './interfaces/jwt-payload.interface.js';
+import { LoginHistoryService } from './services/login-history.service.js';
+
+interface SocialRequest {
+  user: SocialProfile;
+  ip?: string;
+  headers: Record<string, string | string[] | undefined>;
+}
+
+const getUserAgent = (req: {
+  headers: Record<string, string | string[] | undefined>;
+}) => {
+  const ua = req.headers['user-agent'];
+  return (Array.isArray(ua) ? ua[0] : ua) ?? 'unknown';
+};
 
 @Controller('api/v1/auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
     private config: ConfigService,
+    private loginHistoryService: LoginHistoryService,
   ) {}
 
   @Post('register')
@@ -41,10 +56,22 @@ export class AuthController {
   @HttpCode(200)
   @UseGuards(LocalAuthGuard)
   login(
-    @Req() req: { user: { id: string; email: string } },
+    @Req()
+    req: {
+      user: { id: string; email: string };
+      ip?: string;
+      headers: Record<string, string | string[] | undefined>;
+    },
     @Body() _dto: LoginDto,
   ) {
-    return this.authService.login(req.user);
+    const ip =
+      req.ip || req.headers['x-forwarded-for']?.toString() || 'unknown';
+    return this.authService.login(req.user, ip, getUserAgent(req));
+  }
+  @Get('login-history')
+  @UseGuards(JwtAuthGuard)
+  async getLoginHistory(@Req() req: { user: { id: string } }) {
+    return this.loginHistoryService.getHistory(req.user.id);
   }
 
   @Post('refresh')
@@ -88,8 +115,8 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  googleCallback(@Req() req: { user: SocialProfile }, @Res() res: Response) {
-    return this.finishSocialLogin(req.user, res);
+  googleCallback(@Req() req: SocialRequest, @Res() res: Response) {
+    return this.finishSocialLogin(req, res);
   }
 
   @Get('facebook')
@@ -100,8 +127,8 @@ export class AuthController {
 
   @Get('facebook/callback')
   @UseGuards(FacebookAuthGuard)
-  facebookCallback(@Req() req: { user: SocialProfile }, @Res() res: Response) {
-    return this.finishSocialLogin(req.user, res);
+  facebookCallback(@Req() req: SocialRequest, @Res() res: Response) {
+    return this.finishSocialLogin(req, res);
   }
 
   @Get('github')
@@ -112,15 +139,18 @@ export class AuthController {
 
   @Get('github/callback')
   @UseGuards(GithubAuthGuard)
-  githubCallback(@Req() req: { user: SocialProfile }, @Res() res: Response) {
-    return this.finishSocialLogin(req.user, res);
+  githubCallback(@Req() req: SocialRequest, @Res() res: Response) {
+    return this.finishSocialLogin(req, res);
   }
 
-  private async finishSocialLogin(profile: SocialProfile, res: Response) {
+  private async finishSocialLogin(req: SocialRequest, res: Response) {
     const callbackUrl = `${this.config.get('FRONTEND_URL')}/auth/callback`;
     try {
-      const { accessToken, refreshToken } =
-        await this.authService.socialLogin(profile);
+      const { accessToken, refreshToken } = await this.authService.socialLogin(
+        req.user,
+        req.ip ?? 'unknown',
+        getUserAgent(req),
+      );
       const query = new URLSearchParams({ accessToken, refreshToken });
       return res.redirect(`${callbackUrl}?${query}`);
     } catch (error) {

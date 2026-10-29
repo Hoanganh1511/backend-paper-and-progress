@@ -18,6 +18,7 @@ import type {
 import type { RegisterDto } from './dtos/register.dto.js';
 import { PasswordCheckService } from './services/password-check.service.js';
 import { RecaptchaService } from './services/recaptcha.service.js';
+import { LoginHistoryService } from './services/login-history.service.js';
 
 const BCRYPT_ROUNDS = 12;
 const RESET_TOKEN_EXPIRATION = '15m';
@@ -36,6 +37,7 @@ export class AuthService {
     private mail: MailService,
     private passwordCheckService: PasswordCheckService,
     private recaptchaService: RecaptchaService,
+    private loginHistoryService: LoginHistoryService,
   ) {}
 
   // ───────── Email / password ─────────
@@ -76,7 +78,12 @@ export class AuthService {
     return ok ? user : null;
   }
 
-  login(user: { id: string; email: string }) {
+  async login(
+    user: { id: string; email: string },
+    ip: string,
+    userAgent: string,
+  ) {
+    await this.loginHistoryService.recordLogin(user.id, ip, userAgent);
     return this.issueTokens(user.id, user.email);
   }
 
@@ -179,7 +186,7 @@ export class AuthService {
 
   // ───────── Social login ─────────
 
-  async socialLogin(profile: SocialProfile) {
+  async socialLogin(profile: SocialProfile, ip: string, userAgent: string) {
     if (!profile.email) throw new Error('EMAIL_REQUIRED');
     const email = profile.email.toLowerCase();
 
@@ -223,6 +230,7 @@ export class AuthService {
     }
 
     if (!user?.isActive) throw new Error('ACCOUNT_DISABLED');
+    await this.loginHistoryService.recordLogin(user.id, ip, userAgent);
     return this.issueTokens(user.id, user.email);
   }
 

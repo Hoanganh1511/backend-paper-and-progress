@@ -12,6 +12,7 @@ import { GithubStrategy } from './strategies/github.strategy.js';
 import { MailModule } from '../../shared/mail/mail.module.js';
 import { PasswordCheckService } from './services/password-check.service.js';
 import { RecaptchaService } from './services/recaptcha.service.js';
+import { LoginHistoryService } from './services/login-history.service.js';
 
 @Module({
   imports: [PassportModule, JwtModule.register({}), MailModule],
@@ -26,6 +27,7 @@ import { RecaptchaService } from './services/recaptcha.service.js';
     GithubStrategy,
     PasswordCheckService,
     RecaptchaService,
+    LoginHistoryService,
   ],
   exports: [AuthService, PasswordCheckService],
 })
