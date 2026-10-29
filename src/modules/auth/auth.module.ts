@@ -11,6 +11,7 @@ import { FacebookStrategy } from './strategies/facebook.strategy.js';
 import { GithubStrategy } from './strategies/github.strategy.js';
 import { MailModule } from '../../shared/mail/mail.module.js';
 import { PasswordCheckService } from './services/password-check.service.js';
+import { RecaptchaService } from './services/recaptcha.service.js';
 
 @Module({
   imports: [PassportModule, JwtModule.register({}), MailModule],
@@ -24,6 +25,7 @@ import { PasswordCheckService } from './services/password-check.service.js';
     FacebookStrategy,
     GithubStrategy,
     PasswordCheckService,
+    RecaptchaService,
   ],
   exports: [AuthService, PasswordCheckService],
 })

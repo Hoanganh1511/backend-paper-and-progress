@@ -33,6 +33,9 @@ export const envSchema = z.object({
   AWS_REGION: z.string().default('ap-southeast-1'),
   SES_FROM_EMAIL: z.string().email().optional(),
 
+  // reCAPTCHA v3: để trống thì bỏ qua bước verify (dev)
+  RECAPTCHA_SECRET_KEY: z.string().optional(),
+
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 
   THROTTLE_TTL: z.coerce.number().default(60),

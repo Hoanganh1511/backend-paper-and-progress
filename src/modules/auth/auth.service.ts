@@ -17,6 +17,7 @@ import type {
 } from './interfaces/jwt-payload.interface.js';
 import type { RegisterDto } from './dtos/register.dto.js';
 import { PasswordCheckService } from './services/password-check.service.js';
+import { RecaptchaService } from './services/recaptcha.service.js';
 
 const BCRYPT_ROUNDS = 12;
 const RESET_TOKEN_EXPIRATION = '15m';
@@ -34,11 +35,14 @@ export class AuthService {
     private config: ConfigService,
     private mail: MailService,
     private passwordCheckService: PasswordCheckService,
+    private recaptchaService: RecaptchaService,
   ) {}
 
   // ───────── Email / password ─────────
 
   async register(dto: RegisterDto) {
+    await this.recaptchaService.verify(dto.recaptchaToken);
+
     const email = dto.email.toLowerCase();
     const existing = await this.prisma.user.findUnique({ where: { email } });
     if (existing) throw new ConflictException('Email đã được sử dụng');
