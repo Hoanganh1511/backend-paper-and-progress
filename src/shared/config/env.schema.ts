@@ -13,14 +13,25 @@ export const envSchema = z.object({
   REDIS_HOST: z.string().default('localhost'),
   REDIS_PORT: z.coerce.number().default(6379),
 
-  KEYCLOAK_BASE_URL: z.string().url(),
-  KEYCLOAK_REALM: z.string(),
-  KEYCLOAK_CLIENT_ID: z.string(),
-  KEYCLOAK_CLIENT_SECRET: z.string(),
+  JWT_ACCESS_SECRET: z.string().min(16),
+  JWT_REFRESH_SECRET: z.string().min(16),
+  JWT_ACCESS_EXPIRATION: z.string().default('15m'),
+  JWT_REFRESH_EXPIRATION: z.string().default('7d'),
 
-  JWT_ISSUER: z.string().url(),
-  JWT_JWKS_URI: z.string().url(),
-  JWT_AUDIENCE: z.string(),
+  // Social login: để trống nếu chưa dùng provider đó
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_CALLBACK_URL: z.string().url().optional(),
+  FACEBOOK_APP_ID: z.string().optional(),
+  FACEBOOK_APP_SECRET: z.string().optional(),
+  FACEBOOK_CALLBACK_URL: z.string().url().optional(),
+  GITHUB_CLIENT_ID: z.string().optional(),
+  GITHUB_CLIENT_SECRET: z.string().optional(),
+  GITHUB_CALLBACK_URL: z.string().url().optional(),
+
+  // AWS SES (quên mật khẩu); bỏ trống thì link reset chỉ in ra log
+  AWS_REGION: z.string().default('ap-southeast-1'),
+  SES_FROM_EMAIL: z.string().email().optional(),
 
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 
