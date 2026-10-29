@@ -10,6 +10,7 @@ import { GoogleStrategy } from './strategies/google.strategy.js';
 import { FacebookStrategy } from './strategies/facebook.strategy.js';
 import { GithubStrategy } from './strategies/github.strategy.js';
 import { MailModule } from '../../shared/mail/mail.module.js';
+import { PasswordCheckService } from './services/password-check.service.js';
 
 @Module({
   imports: [PassportModule, JwtModule.register({}), MailModule],
@@ -22,7 +23,8 @@ import { MailModule } from '../../shared/mail/mail.module.js';
     GoogleStrategy,
     FacebookStrategy,
     GithubStrategy,
+    PasswordCheckService,
   ],
-  exports: [AuthService],
+  exports: [AuthService, PasswordCheckService],
 })
 export class AuthModule {}

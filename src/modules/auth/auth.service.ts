@@ -16,6 +16,7 @@ import type {
   SocialProfile,
 } from './interfaces/jwt-payload.interface.js';
 import type { RegisterDto } from './dtos/register.dto.js';
+import { PasswordCheckService } from './services/password-check.service.js';
 
 const BCRYPT_ROUNDS = 12;
 const RESET_TOKEN_EXPIRATION = '15m';
@@ -32,6 +33,7 @@ export class AuthService {
     private jwt: JwtService,
     private config: ConfigService,
     private mail: MailService,
+    private passwordCheckService: PasswordCheckService,
   ) {}
 
   // ───────── Email / password ─────────
@@ -40,6 +42,15 @@ export class AuthService {
     const email = dto.email.toLowerCase();
     const existing = await this.prisma.user.findUnique({ where: { email } });
     if (existing) throw new ConflictException('Email đã được sử dụng');
+
+    const { pwned, count } = await this.passwordCheckService.isPasswordPwned(
+      dto.password,
+    );
+    if (pwned) {
+      throw new BadRequestException(
+        `Mật khẩu này đã xuất hiện trong ${count.toLocaleString()} vụ rò rỉ dữ liệu. Vui lòng chọn mật khẩu khác.`,
+      );
+    }
 
     const user = await this.prisma.user.create({
       data: {
@@ -142,6 +153,14 @@ export class AuthService {
       if (payload.purpose !== 'reset-password') throw invalid;
     } catch {
       throw invalid;
+    }
+
+    const { pwned, count } =
+      await this.passwordCheckService.isPasswordPwned(newPassword);
+    if (pwned) {
+      throw new BadRequestException(
+        `Mật khẩu này đã xuất hiện trong ${count.toLocaleString()} vụ rò rỉ dữ liệu. Vui lòng chọn mật khẩu khác.`,
+      );
     }
 
     await this.prisma.$transaction([
