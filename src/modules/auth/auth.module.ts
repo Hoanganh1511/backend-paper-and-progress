@@ -12,11 +12,14 @@ import { GithubStrategy } from './strategies/github.strategy.js';
 import { MailModule } from '../../shared/mail/mail.module.js';
 import { PasswordCheckService } from './services/password-check.service.js';
 import { RecaptchaService } from './services/recaptcha.service.js';
+import { CryptoService } from './services/crypto.service.js';
+import { TotpService } from './services/totp.service.js';
+import { TotpController } from './totp.controller.js';
 import { LoginHistoryService } from './services/login-history.service.js';
 
 @Module({
   imports: [PassportModule, JwtModule.register({}), MailModule],
-  controllers: [AuthController],
+  controllers: [AuthController, TotpController],
   providers: [
     AuthService,
     LocalStrategy,
@@ -28,6 +31,8 @@ import { LoginHistoryService } from './services/login-history.service.js';
     PasswordCheckService,
     RecaptchaService,
     LoginHistoryService,
+    CryptoService,
+    TotpService,
   ],
   exports: [AuthService, PasswordCheckService],
 })

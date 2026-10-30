@@ -23,6 +23,7 @@ import { RefreshTokenDto } from './dtos/refresh-token.dto.js';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto.js';
 import { ResetPasswordDto } from './dtos/reset-password.dto.js';
 import type { SocialProfile } from './interfaces/jwt-payload.interface.js';
+import { TotpLoginDto } from './dtos/totp-login.dto.js';
 import { LoginHistoryService } from './services/login-history.service.js';
 
 interface SocialRequest {
@@ -47,8 +48,8 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  register(@Body() dto: RegisterDto, @Req() req: { ip?: string }) {
+    return this.authService.register(dto, req.ip);
   }
 
   // LoginDto dùng để validate body; việc xác thực do LocalAuthGuard làm
@@ -68,6 +69,26 @@ export class AuthController {
       req.ip || req.headers['x-forwarded-for']?.toString() || 'unknown';
     return this.authService.login(req.user, ip, getUserAgent(req));
   }
+  @Post('login/totp')
+  @HttpCode(200)
+  loginTotp(
+    @Req()
+    req: {
+      ip?: string;
+      headers: Record<string, string | string[] | undefined>;
+    },
+    @Body() dto: TotpLoginDto,
+  ) {
+    const ip =
+      req.ip || req.headers['x-forwarded-for']?.toString() || 'unknown';
+    return this.authService.completeMfaLogin(
+      dto.mfaToken,
+      dto.code,
+      ip,
+      getUserAgent(req),
+    );
+  }
+
   @Get('login-history')
   @UseGuards(JwtAuthGuard)
   async getLoginHistory(@Req() req: { user: { id: string } }) {
@@ -146,12 +167,19 @@ export class AuthController {
   private async finishSocialLogin(req: SocialRequest, res: Response) {
     const callbackUrl = `${this.config.get('FRONTEND_URL')}/auth/callback`;
     try {
-      const { accessToken, refreshToken } = await this.authService.socialLogin(
+      const result = await this.authService.socialLogin(
         req.user,
         req.ip ?? 'unknown',
         getUserAgent(req),
       );
-      const query = new URLSearchParams({ accessToken, refreshToken });
+      if ('mfaRequired' in result) {
+        const mfaQuery = new URLSearchParams({ mfaToken: result.mfaToken });
+        return res.redirect(`${callbackUrl}?mfaRequired=1&${mfaQuery}`);
+      }
+      const query = new URLSearchParams({
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      });
       return res.redirect(`${callbackUrl}?${query}`);
     } catch (error) {
       const code = error instanceof Error ? error.message : 'LOGIN_FAILED';

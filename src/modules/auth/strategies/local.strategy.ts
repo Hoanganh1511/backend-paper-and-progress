@@ -14,12 +14,12 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(
-    req: { body?: { recaptchaToken?: string } },
+    req: { body?: { recaptchaToken?: string }; ip?: string },
     email: string,
     password: string,
   ) {
     // verify reCAPTCHA trước khi động đến credentials
-    await this.recaptchaService.verify(req.body?.recaptchaToken);
+    await this.recaptchaService.verify(req.body?.recaptchaToken, req.ip);
 
     const user = await this.authService.validateUser(email, password);
     if (!user) throw new UnauthorizedException('Invalid email or password');

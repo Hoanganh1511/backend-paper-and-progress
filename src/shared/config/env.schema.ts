@@ -18,6 +18,9 @@ export const envSchema = z.object({
   JWT_ACCESS_EXPIRATION: z.string().default('15m'),
   JWT_REFRESH_EXPIRATION: z.string().default('7d'),
 
+  // Khoá AES-256-GCM mã hoá TOTP secret: 32 byte, base64 (openssl rand -base64 32)
+  TOTP_ENC_KEY: z.string().min(32),
+
   // Social login: để trống nếu chưa dùng provider đó
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
@@ -35,6 +38,11 @@ export const envSchema = z.object({
 
   // reCAPTCHA v3: để trống thì bỏ qua bước verify (dev)
   RECAPTCHA_SECRET_KEY: z.string().optional(),
+
+  // Daily English: DAILY_GATE_TODAY=YYYY-MM-DD giả lập "hôm nay" để thử (chỉ dùng khi dev)
+  DAILY_GATE_TODAY: z
+    .union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal('')])
+    .optional(),
 
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 

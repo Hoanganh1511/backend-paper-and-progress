@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { SecurityEventService } from '../../admin/services/security-event.service.js';
 
 const VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify';
 const MIN_SCORE = 0.5;
@@ -13,9 +14,12 @@ interface SiteVerifyResponse {
 export class RecaptchaService {
   private readonly logger = new Logger(RecaptchaService.name);
 
-  constructor(private config: ConfigService) {}
+  constructor(
+    private config: ConfigService,
+    private securityEvents: SecurityEventService,
+  ) {}
 
-  async verify(token?: string | null): Promise<void> {
+  async verify(token?: string | null, ip?: string): Promise<void> {
     const secret = this.config.get<string>('RECAPTCHA_SECRET_KEY');
     // chưa cấu hình secret => bỏ qua để dev không bị block
     if (!secret) return;
@@ -38,6 +42,10 @@ export class RecaptchaService {
     }
 
     if (!data.success || (data.score ?? 0) < MIN_SCORE) {
+      await this.securityEvents.log('RECAPTCHA_REJECT', null, ip, {
+        success: data.success,
+        score: data.score ?? null,
+      });
       throw new BadRequestException('Xác thực reCAPTCHA không thành công');
     }
   }

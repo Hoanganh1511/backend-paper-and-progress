@@ -19,6 +19,7 @@ import type { RegisterDto } from './dtos/register.dto.js';
 import { PasswordCheckService } from './services/password-check.service.js';
 import { RecaptchaService } from './services/recaptcha.service.js';
 import { LoginHistoryService } from './services/login-history.service.js';
+import { TotpService } from './services/totp.service.js';
 
 const BCRYPT_ROUNDS = 12;
 const RESET_TOKEN_EXPIRATION = '15m';
@@ -38,12 +39,13 @@ export class AuthService {
     private passwordCheckService: PasswordCheckService,
     private recaptchaService: RecaptchaService,
     private loginHistoryService: LoginHistoryService,
+    private totpService: TotpService,
   ) {}
 
   // ───────── Email / password ─────────
 
-  async register(dto: RegisterDto) {
-    await this.recaptchaService.verify(dto.recaptchaToken);
+  async register(dto: RegisterDto, ip?: string) {
+    await this.recaptchaService.verify(dto.recaptchaToken, ip);
 
     const email = dto.email.toLowerCase();
     const existing = await this.prisma.user.findUnique({ where: { email } });
@@ -51,6 +53,7 @@ export class AuthService {
 
     const { pwned, count } = await this.passwordCheckService.isPasswordPwned(
       dto.password,
+      { ip },
     );
     if (pwned) {
       throw new BadRequestException(
@@ -83,8 +86,28 @@ export class AuthService {
     ip: string,
     userAgent: string,
   ) {
-    await this.loginHistoryService.recordLogin(user.id, ip, userAgent);
-    return this.issueTokens(user.id, user.email);
+    if (await this.totpService.isEnabled(user.id)) {
+      return this.mfaChallenge(user);
+    }
+    return this.finishLogin(user, ip, userAgent);
+  }
+
+  // Bước 2 của login khi bật 2FA: mfaToken + TOTP code (hoặc recovery code)
+  async completeMfaLogin(
+    mfaToken: string,
+    code: string,
+    ip: string,
+    userAgent: string,
+  ) {
+    const user = this.verifyMfaToken(mfaToken);
+    const valid = await this.totpService.verifyCodeOrRecovery(
+      user.sub,
+      code,
+      ip,
+    );
+    if (!valid) throw new UnauthorizedException('Mã xác thực không đúng.');
+
+    return this.finishLogin({ id: user.sub, email: user.email }, ip, userAgent);
   }
 
   async refresh(userId: string, rawRefreshToken: string) {
@@ -166,8 +189,10 @@ export class AuthService {
       throw invalid;
     }
 
-    const { pwned, count } =
-      await this.passwordCheckService.isPasswordPwned(newPassword);
+    const { pwned, count } = await this.passwordCheckService.isPasswordPwned(
+      newPassword,
+      { userId: user.id },
+    );
     if (pwned) {
       throw new BadRequestException(
         `Mật khẩu này đã xuất hiện trong ${count.toLocaleString()} vụ rò rỉ dữ liệu. Vui lòng chọn mật khẩu khác.`,
@@ -230,14 +255,54 @@ export class AuthService {
     }
 
     if (!user?.isActive) throw new Error('ACCOUNT_DISABLED');
-    await this.loginHistoryService.recordLogin(user.id, ip, userAgent);
-    return this.issueTokens(user.id, user.email);
+    if (await this.totpService.isEnabled(user.id)) {
+      return this.mfaChallenge(user);
+    }
+    return this.finishLogin(user, ip, userAgent);
   }
 
   // ───────── Helpers ─────────
 
+  private async finishLogin(
+    user: { id: string; email: string },
+    ip: string,
+    userAgent: string,
+  ) {
+    await this.loginHistoryService.recordLogin(user.id, ip, userAgent);
+    return this.issueTokens(user.id, user.email);
+  }
+
+  // Secret khác JWT_ACCESS_SECRET nên mfaToken không dùng được làm access token
+  private mfaSecret() {
+    return this.config.getOrThrow<string>('JWT_ACCESS_SECRET') + ':mfa';
+  }
+
+  private mfaChallenge(user: { id: string; email: string }) {
+    const mfaToken = this.jwt.sign(
+      { sub: user.id, email: user.email, scope: 'mfa' },
+      { secret: this.mfaSecret(), expiresIn: '5m' },
+    );
+    return { mfaRequired: true as const, mfaToken };
+  }
+
+  private verifyMfaToken(token: string) {
+    try {
+      const payload = this.jwt.verify<JwtPayload & { scope?: string }>(token, {
+        secret: this.mfaSecret(),
+      });
+      if (payload.scope !== 'mfa') throw new Error('bad scope');
+      return payload;
+    } catch {
+      throw new UnauthorizedException('mfaToken không hợp lệ hoặc đã hết hạn.');
+    }
+  }
+
   private async issueTokens(userId: string, email: string) {
-    const payload: JwtPayload = { sub: userId, email };
+    const { role } = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { role: true },
+    });
+    const payload: JwtPayload = { sub: userId, email, role };
     const accessToken = this.jwt.sign(payload, {
       secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'),
       expiresIn: this.config.get<string>(

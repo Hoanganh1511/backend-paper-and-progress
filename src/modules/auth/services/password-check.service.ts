@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
+import { SecurityEventService } from '../../admin/services/security-event.service.js';
 
 @Injectable()
 export class PasswordCheckService {
+  constructor(private securityEvents: SecurityEventService) {}
+
   // Hash SHA-1 rồi tách prefix/suffix
   private hashPassword(password: string): { prefix: string; suffix: string } {
     const hash = crypto
@@ -20,6 +23,7 @@ export class PasswordCheckService {
   // Gọi HIBP API Kiểm tra
   async isPasswordPwned(
     password: string,
+    ctx?: { userId?: string; ip?: string },
   ): Promise<{ pwned: boolean; count: number }> {
     const { prefix, suffix } = this.hashPassword(password);
 
@@ -48,7 +52,12 @@ export class PasswordCheckService {
     for (const line of lines) {
       const [hashSuffix, count] = line.split(':');
       if (hashSuffix.trim() === suffix) {
-        return { pwned: true, count: parseInt(count.trim(), 10) };
+        const leaks = parseInt(count.trim(), 10);
+        // chỉ ghi số lần bị lộ, không ghi password/hash
+        await this.securityEvents.log('HIBP_BLOCK', ctx?.userId, ctx?.ip, {
+          count: leaks,
+        });
+        return { pwned: true, count: leaks };
       }
     }
     return { pwned: false, count: 0 };

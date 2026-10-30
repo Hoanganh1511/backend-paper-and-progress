@@ -19,10 +19,15 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  accounts      Account[]
-  profile       UserProfile?
-  refreshTokens RefreshToken[]
-  loginHistory  LoginHistory[]
+  accounts       Account[]
+  profile        UserProfile?
+  refreshTokens  RefreshToken[]
+  loginHistory   LoginHistory[]
+  totp           UserTotp?
+  securityEvents SecurityEvent[]
+  todos          Todo[]
+  dailyProgress  UserDailyProgress[]
+  wordReviews    WordReview[]
 }
 
 enum Role {
@@ -99,4 +104,235 @@ model LoginHistory {
 
   @@index([userId])
   @@index([userId, ip])
+}
+
+model UserTotp {
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  secretEnc    String // AES-256-GCM encrypted base32 secret
+  enabled      Boolean   @default(false)
+  lastUsedStep Int? // chống replay cùng 1 code
+  createdAt    DateTime  @default(now())
+  enabledAt    DateTime?
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recoveryCodes RecoveryCode[]
+}
+
+model RecoveryCode {
+  id       String    @id @default(uuid())
+  totpId   String
+  codeHash String // chỉ lưu hash, không lưu plaintext
+  usedAt   DateTime?
+
+  totp UserTotp @relation(fields: [totpId], references: [id], onDelete: Cascade)
+}
+
+// ═══════ Admin: security events ═══════
+model SecurityEvent {
+  id        String   @id @default(uuid())
+  type      String // RECAPTCHA_REJECT, HIBP_BLOCK, TOTP_FAIL, RECOVERY_USED, ANOMALY_ALERT
+  userId    String?
+  ip        String?
+  metadata  Json? // chi tiết thêm (score, reason...)
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ═══════ User notes / todos ═══════
+model Todo {
+  id          String    @id @default(uuid())
+  userId      String
+  title       String    @db.VarChar(255)
+  note        String?   @db.Text
+  status      String    @default("pending") // pending | in_progress | done
+  priority    String    @default("medium") // low | medium | high
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+}
+
+// ═══════ Project dashboard ═══════
+enum CriteriaStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+}
+
+enum CriteriaPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ProjectHealth {
+  ON_TRACK
+  AT_RISK
+  NEEDS_ATTENTION
+}
+
+model ProjectConfig {
+  id          String        @id @default(uuid())
+  name        String // tên dự án, ví dụ "Paper & Progress"
+  description String? // mô tả ngắn
+  health      ProjectHealth @default(ON_TRACK)
+  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime      @default(now())
+}
+
+model CriteriaCategory {
+  id          String   @id @default(uuid())
+  name        String // "Frontend (Next.js)", "Backend (NestJS)"...
+  description String? // "UI, responsive, routing..."
+  icon        String? // tên icon để frontend render
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  criteria ProjectCriteria[]
+
+  @@index([sortOrder])
+}
+
+model ProjectCriteria {
+  id              String           @id @default(uuid())
+  categoryId      String
+  title           String
+  description     String?          @db.Text
+  status          CriteriaStatus   @default(NOT_STARTED)
+  priority        CriteriaPriority @default(MEDIUM)
+  deadline        DateTime?
+  needsReview     Boolean          @default(false)
+  needsDiscussion Boolean          @default(false)
+  notes           String?          @db.Text // development notes
+  evidenceUrl     String? // GitHub URL hoặc link minh chứng
+  completedAt     DateTime? // set khi status chuyển sang COMPLETED
+  sortOrder       Int              @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  category   CriteriaCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  activities ProjectActivity[]
+
+  @@index([categoryId])
+  @@index([status])
+  @@index([deadline])
+}
+
+model ProjectActivity {
+  id          String   @id @default(uuid())
+  criteriaId  String?
+  categoryId  String?
+  type        String // STATUS_CHANGED, CRITERIA_CREATED, CRITERIA_UPDATED, CRITERIA_DELETED, CATEGORY_CREATED, CATEGORY_DELETED, NOTE_ADDED
+  title       String // "Hoàn thành JWT Authentication"
+  description String? // chi tiết thay đổi, ví dụ "NOT_STARTED → IN_PROGRESS"
+  oldValue    String? // giá trị cũ (cho status change)
+  newValue    String? // giá trị mới
+  createdAt   DateTime @default(now())
+
+  criteria ProjectCriteria? @relation(fields: [criteriaId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([criteriaId])
+  @@index([type])
+}
+
+// ═══════ Daily English Gate ═══════
+// Khoá platform cho tới khi user qua bài từ vựng hằng ngày (B2 Destination)
+
+enum VocabSection {
+  TOPIC_CONTRAST
+  PHRASAL_VERB
+  PHRASE_COLLOCATION
+  WORD_PATTERN
+  WORD_FORMATION
+}
+
+enum LessonType {
+  NEW
+  REVIEW
+  FINAL_TEST
+}
+
+model VocabularyUnit {
+  id         Int      @id @default(autoincrement())
+  unitNumber Int      @unique // 2,4,6,...,28
+  topic      String // "Travel and transport", ...
+  createdAt  DateTime @default(now())
+
+  words VocabularyWord[]
+}
+
+model VocabularyWord {
+  id        Int            @id @default(autoincrement())
+  unitId    Int
+  section   VocabSection
+  word      String // từ chính: "voyage", "catch up with", "have an accident"
+  meaning   String // nghĩa tiếng Anh ngắn gọn
+  example   String? // câu ví dụ, chứa nguyên văn `word`
+  contrast  String? // các từ dễ nhầm (TOPIC_CONTRAST): "journey / trip / travel"
+  forms     String? // các dạng từ (WORD_FORMATION): "arrival (noun)"
+  pattern   String? // word pattern: "afraid of sth/doing; afraid to do"
+  createdAt DateTime @default(now())
+
+  unit    VocabularyUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  reviews WordReview[]
+
+  @@index([unitId, section])
+}
+
+model DailyLesson {
+  id        Int        @id @default(autoincrement())
+  dayNumber Int        @unique // 1-30
+  date      DateTime   @unique @db.Date // 1 ngày = 1 lesson
+  type      LessonType
+  unitIds   Int[] // id của VocabularyUnit học / ôn trong ngày
+  createdAt DateTime   @default(now())
+
+  progresses UserDailyProgress[]
+}
+
+model UserDailyProgress {
+  id                Int       @id @default(autoincrement())
+  userId            String
+  lessonId          Int
+  learnCompleted    Boolean   @default(false)
+  practiceCompleted Boolean   @default(false)
+  testCompleted     Boolean   @default(false)
+  testScore         Int? // 0-100, điểm của lần làm test gần nhất
+  bestScore         Int? // điểm cao nhất
+  testAttempts      Int       @default(0) // số lần đã nộp test; đổi bộ câu hỏi mỗi lần
+  gateUnlocked      Boolean   @default(false) // true khi test >= 70%
+  completedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson DailyLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+model WordReview {
+  id         Int      @id @default(autoincrement())
+  userId     String
+  wordId     Int
+  correct    Boolean
+  reviewedAt DateTime @default(now())
+
+  user User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word VocabularyWord @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@index([userId, wordId])
 }

@@ -1,6 +1,7 @@
 export interface JwtPayload {
   sub: string; // userId
   email: string;
+  role?: 'USER' | 'CREATOR' | 'ADMIN';
 }
 
 export interface SocialProfile {

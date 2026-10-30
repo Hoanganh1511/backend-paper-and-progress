@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../shared/database/prisma.service.js';
 import { MailService } from '../../../shared/mail/mail.service.js';
+import { SecurityEventService } from '../../admin/services/security-event.service.js';
 @Injectable()
 export class LoginHistoryService {
   private readonly logger = new Logger(LoginHistoryService.name);
   constructor(
     private prisma: PrismaService,
     private mail: MailService,
+    private securityEvents: SecurityEventService,
   ) {}
 
   async recordLogin(
@@ -44,6 +46,10 @@ export class LoginHistoryService {
 
       // hasHistory > 1 because just create 1 record above
       if (hasHistory > 1) {
+        await this.securityEvents.log('ANOMALY_ALERT', userId, ip, {
+          reason: 'new_ip',
+          userAgent,
+        });
         this.sendAlertEmail(userId, ip, userAgent).catch((err) =>
           this.logger.error('Failed to send login alert email', err),
         );
