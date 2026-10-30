@@ -23,6 +23,7 @@ import { TotpService } from './services/totp.service.js';
 
 const BCRYPT_ROUNDS = 12;
 const RESET_TOKEN_EXPIRATION = '15m';
+const VERIFY_TOKEN_EXPIRATION = '24h';
 
 const sha256 = (value: string) =>
   createHash('sha256').update(value).digest('hex');
@@ -69,6 +70,7 @@ export class AuthService {
         profile: { create: { displayName: dto.displayName } },
       },
     });
+    await this.sendVerificationEmail(user);
     return this.toPublicUser(user);
   }
 
@@ -138,6 +140,59 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user?.isActive) throw new UnauthorizedException();
     return this.toPublicUser(user);
+  }
+
+  // ───────── Verify email (không chặn login) ─────────
+
+  async resendVerification(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user?.isActive) throw new UnauthorizedException();
+    if (user.emailVerifiedAt) {
+      throw new BadRequestException('Email đã được xác nhận');
+    }
+    await this.sendVerificationEmail(user);
+    return { message: 'Email xác nhận đã được gửi' };
+  }
+
+  async verifyEmail(token: string) {
+    const invalid = new BadRequestException(
+      'Token không hợp lệ hoặc đã hết hạn',
+    );
+    let payload: { sub?: string; email?: string; purpose?: string };
+    try {
+      payload = this.jwt.verify(token, { secret: this.verifySecret() });
+    } catch {
+      throw invalid;
+    }
+    if (payload.purpose !== 'verify-email' || !payload.sub) throw invalid;
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+    });
+    // token gắn với email lúc gửi => đổi email thì token cũ vô hiệu
+    if (!user?.isActive || user.email !== payload.email) throw invalid;
+
+    if (!user.emailVerifiedAt) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerifiedAt: new Date() },
+      });
+    }
+    return { message: 'Xác nhận email thành công' };
+  }
+
+  private async sendVerificationEmail(user: { id: string; email: string }) {
+    const token = this.jwt.sign(
+      { sub: user.id, email: user.email, purpose: 'verify-email' },
+      { secret: this.verifySecret(), expiresIn: VERIFY_TOKEN_EXPIRATION },
+    );
+    const url = `${this.config.get('FRONTEND_URL')}/verify-email?token=${token}`;
+    try {
+      await this.mail.sendEmailVerification(user.email, url);
+    } catch (error) {
+      // không làm hỏng đăng ký; user có thể gửi lại sau
+      this.logger.error('Send verification email failed', error);
+    }
   }
 
   // ───────── Forgot / reset password ─────────
@@ -247,6 +302,7 @@ export class AuthService {
             email,
             displayName: profile.displayName,
             avatarUrl: profile.avatarUrl,
+            emailVerifiedAt: new Date(), // email do nhà cung cấp OAuth trả về
             profile: { create: { displayName: profile.displayName } },
             accounts: { create: { ...accountKey, ...accountData } },
           },
@@ -329,6 +385,12 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  private verifySecret() {
+    return (
+      this.config.getOrThrow<string>('JWT_ACCESS_SECRET') + ':verify-email'
+    );
+  }
+
   private resetSecret(passwordHash: string | null) {
     return (
       this.config.getOrThrow<string>('JWT_ACCESS_SECRET') + (passwordHash ?? '')
@@ -341,6 +403,7 @@ export class AuthService {
     displayName: string | null;
     avatarUrl: string | null;
     role: string;
+    emailVerifiedAt?: Date | null;
   }) {
     return {
       id: user.id,
@@ -348,6 +411,7 @@ export class AuthService {
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
       role: user.role,
+      emailVerified: !!user.emailVerifiedAt,
     };
   }
 }

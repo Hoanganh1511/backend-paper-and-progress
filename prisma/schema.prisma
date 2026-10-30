@@ -9,15 +9,16 @@ datasource db {
 
 // ═══════ M1: Auth ═══════
 model User {
-  id          String   @id @default(uuid())
-  email       String   @unique
-  password    String? // null nếu đăng ký qua social
-  displayName String?
-  avatarUrl   String?
-  role        Role     @default(USER)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String    @id @default(uuid())
+  email           String    @unique
+  password        String? // null nếu đăng ký qua social
+  displayName     String?
+  avatarUrl       String?
+  role            Role      @default(USER)
+  isActive        Boolean   @default(true)
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   accounts       Account[]
   profile        UserProfile?
@@ -275,7 +276,7 @@ model VocabularyUnit {
 }
 
 model VocabularyWord {
-  id        Int            @id @default(autoincrement())
+  id        Int          @id @default(autoincrement())
   unitId    Int
   section   VocabSection
   word      String // từ chính: "voyage", "catch up with", "have an accident"
@@ -284,7 +285,7 @@ model VocabularyWord {
   contrast  String? // các từ dễ nhầm (TOPIC_CONTRAST): "journey / trip / travel"
   forms     String? // các dạng từ (WORD_FORMATION): "arrival (noun)"
   pattern   String? // word pattern: "afraid of sth/doing; afraid to do"
-  createdAt DateTime @default(now())
+  createdAt DateTime     @default(now())
 
   unit    VocabularyUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
   reviews WordReview[]

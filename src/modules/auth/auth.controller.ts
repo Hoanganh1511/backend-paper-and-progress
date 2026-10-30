@@ -21,6 +21,7 @@ import { RegisterDto } from './dtos/register.dto.js';
 import { LoginDto } from './dtos/login.dto.js';
 import { RefreshTokenDto } from './dtos/refresh-token.dto.js';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto.js';
+import { VerifyEmailDto } from './dtos/verify-email.dto.js';
 import { ResetPasswordDto } from './dtos/reset-password.dto.js';
 import type { SocialProfile } from './interfaces/jwt-payload.interface.js';
 import { TotpLoginDto } from './dtos/totp-login.dto.js';
@@ -112,6 +113,19 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   me(@Req() req: { user: { sub: string } }) {
     return this.authService.me(req.user.sub);
+  }
+
+  @Post('verify-email')
+  @HttpCode(200)
+  verifyEmail(@Body() dto: VerifyEmailDto) {
+    return this.authService.verifyEmail(dto.token);
+  }
+
+  @Post('resend-verification')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  resendVerification(@Req() req: { user: { sub: string } }) {
+    return this.authService.resendVerification(req.user.sub);
   }
 
   @Post('forgot-password')

@@ -88,4 +88,30 @@ export class MailService {
       }),
     );
   }
+
+  async sendEmailVerification(to: string, verifyUrl: string) {
+    if (!this.from) {
+      // dev: chưa cấu hình SES thì in link ra log
+      this.logger.warn(
+        `SES_FROM_EMAIL not set. Verify link for ${to}: ${verifyUrl}`,
+      );
+      return;
+    }
+
+    await this.ses.send(
+      new SendEmailCommand({
+        Source: this.from,
+        Destination: { ToAddresses: [to] },
+        Message: {
+          Subject: { Data: 'Xác nhận email Paper & Progress' },
+          Body: {
+            Html: {
+              Data: `<p>Cảm ơn bạn đã đăng ký Paper & Progress.</p><p><a href="${verifyUrl}">Xác nhận email</a></p><p>Link có hiệu lực trong 24 giờ.</p>`,
+            },
+            Text: { Data: `Xác nhận email: ${verifyUrl} (hiệu lực 24 giờ)` },
+          },
+        },
+      }),
+    );
+  }
 }
