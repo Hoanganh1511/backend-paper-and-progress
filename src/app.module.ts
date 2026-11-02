@@ -13,6 +13,7 @@ import { LearningActivityModule } from './modules/learning-activity/learning-act
 import { KnowledgeModule } from './modules/knowledge/knowledge.module.js';
 import { LearningPathsModule } from './modules/learning-paths/learning-paths.module.js';
 import { ArticlesModule } from './modules/articles/articles.module.js';
+import { MembershipModule } from './modules/membership/membership.module.js';
 import { DailyGateModule } from './modules/daily-gate/daily-gate.module.js';
 
 @Module({
@@ -29,6 +30,7 @@ import { DailyGateModule } from './modules/daily-gate/daily-gate.module.js';
     TodosModule,
     DailyGateModule,
     ArticlesModule,
+    MembershipModule,
     LearningActivityModule,
     KnowledgeModule,
     LearningPathsModule,

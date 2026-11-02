@@ -14,6 +14,7 @@ import type {
   UpdateArticleInput,
 } from '../articles.schema.js';
 import { ArticleCacheService } from './article-cache.service.js';
+import { MembershipService } from '../../membership/membership.service.js';
 import { ContentService } from './content.service.js';
 import { RevalidateService } from './revalidate.service.js';
 import { RevisionsService } from './revisions.service.js';
@@ -84,6 +85,7 @@ export class ArticlesService {
     private revisions: RevisionsService,
     private cache: ArticleCacheService,
     private revalidator: RevalidateService,
+    private membership: MembershipService,
   ) {}
 
   /* ------------------------------------------------------------------------ */
@@ -198,25 +200,43 @@ export class ArticlesService {
     const { contentHtml, ...rest } = article;
     const meta = { ...toCard(rest), related: await this.related(article) };
 
-    if (isManager || article.visibility === 'PUBLIC' || viewer) {
+    // Only members read a limited article in full (its author and admins too).
+    // Signing in is not enough; `reason` tells the page which prompt to show.
+    const isMember =
+      !isManager && article.visibility !== 'PUBLIC' && viewer
+        ? await this.membership.isMember(viewer.sub)
+        : false;
+    if (isManager || article.visibility === 'PUBLIC' || isMember) {
       return { ...meta, gated: false as const, contentHtml };
     }
+    const reason = viewer ? ('MEMBERSHIP' as const) : ('LOGIN' as const);
     if (article.visibility === 'PREVIEW') {
       return {
         ...meta,
         gated: true as const,
         fullAvailable: true,
+        reason,
         previewHtml: this.content.previewHtml(contentHtml),
       };
     }
     // MEMBERS_ONLY: enough for a preview card, nothing of the content.
-    throw new UnauthorizedException({
-      statusCode: 401,
-      message: 'Đăng nhập để đọc bài viết này.',
+    const body = {
       gated: true,
+      reason,
       title: article.title,
       excerpt: article.excerpt,
-    });
+    };
+    throw viewer
+      ? new ForbiddenException({
+          statusCode: 403,
+          message: 'Đăng ký hội viên để đọc bài viết này.',
+          ...body,
+        })
+      : new UnauthorizedException({
+          statusCode: 401,
+          message: 'Đăng nhập để đọc bài viết này.',
+          ...body,
+        });
   }
 
   /** Up to three other published articles that share a tag. */

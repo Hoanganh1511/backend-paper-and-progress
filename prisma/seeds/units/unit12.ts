@@ -1,0 +1,426 @@
+// Unit 12: Law and crime. Headwords follow the book's list; meanings and
+// examples are short, original ones.
+import { unitFromRows } from '../vocabulary-helpers.ts';
+
+export const unit12 = unitFromRows(12, 'Law and crime', {
+  contrast: [
+    [
+      'proof',
+      'evidence',
+      'facts that show that something is true',
+      'The police have no proof that he was there.',
+    ],
+    [
+      'rule',
+      'law / justice / right',
+      'an instruction that says what you must or must not do',
+      'It is against the rule to park here.',
+    ],
+    [
+      'vandal',
+      'hooligan',
+      'a person who damages public property on purpose',
+      'The vandal broke the windows of the bus shelter.',
+    ],
+    [
+      'suspect',
+      'arrest / charge / accused',
+      'a person the police think may have done a crime',
+      'The main suspect was questioned for six hours.',
+    ],
+    [
+      'judge',
+      'jury',
+      'the person in a court who decides how to punish a criminal',
+      'The judge listened carefully to both sides.',
+    ],
+    [
+      'sentence',
+      'imprison',
+      'the punishment a court gives to a guilty person',
+      'He received a three-year prison sentence.',
+    ],
+    [
+      'prosecute',
+      'persecute',
+      'to take someone to court for a crime',
+      'The company will prosecute anyone who steals from its shops.',
+    ],
+    [
+      'innocent',
+      'guilty',
+      'not having done the crime you are accused of',
+      'The jury decided that she was innocent.',
+    ],
+    [
+      'decision',
+      'verdict',
+      'a choice that you make after thinking',
+      'The court will announce its decision tomorrow.',
+    ],
+    [
+      'capital punishment',
+      'corporal punishment',
+      'the legal killing of a person who has committed a serious crime',
+      'Many countries have ended capital punishment.',
+    ],
+    [
+      'witness',
+      'bystander',
+      'a person who sees a crime happen',
+      'A witness saw the thief run away.',
+    ],
+    [
+      'commit',
+      'break',
+      'to do something illegal or wrong',
+      'Some young people commit a crime without thinking.',
+    ],
+    [
+      'robber',
+      'burglar / thief',
+      'a person who takes money by using force or threats',
+      'The robber ran out of the bank with a bag of cash.',
+    ],
+    [
+      'lawyer',
+      'solicitor',
+      'a person whose job is to give legal advice and speak in court',
+      'You should ask a lawyer before you sign the contract.',
+    ],
+  ],
+  phrasal: [
+    [
+      'back down',
+      'to stop demanding something or give up an argument',
+      'The union refused to back down over pay.',
+    ],
+    [
+      'hand in',
+      'to give something to a person in authority',
+      'The man decided to hand in the wallet he had found.',
+    ],
+    [
+      'break out',
+      'to escape from prison',
+      'Two prisoners tried to break out last night.',
+    ],
+    [
+      'hold up',
+      'to rob someone while threatening them; to delay',
+      'Three men tried to hold up the post office.',
+    ],
+    [
+      'let off',
+      'to give little or no punishment',
+      'The judge decided to let off the boy with a warning.',
+    ],
+    [
+      'bring in',
+      'to introduce a new law or system',
+      'The government plans to bring in a new law on speeding.',
+    ],
+    [
+      'chase after',
+      'to run behind someone to catch them',
+      'The police officer began to chase after the thief.',
+    ],
+    [
+      'look into',
+      'to investigate something',
+      'Detectives will look into the case this week.',
+    ],
+    [
+      'come forward',
+      'to offer help or information',
+      'We hope more witnesses will come forward.',
+    ],
+    [
+      'make off',
+      'to escape quickly, often with something stolen',
+      'The burglars tried to make off with the television.',
+    ],
+    [
+      'get away with',
+      'to avoid punishment for something wrong',
+      'Nobody should be able to get away with fraud.',
+    ],
+    [
+      'take down',
+      'to write down what someone says',
+      'The officer will take down your name and address.',
+    ],
+    [
+      'go off',
+      'to explode, or to be fired (a gun)',
+      'The bomb could go off at any moment.',
+    ],
+    [
+      'take in',
+      'to trick someone into believing something untrue',
+      'Do not let a stranger take in you with a false story.',
+    ],
+  ],
+  collocation: [
+    [
+      'take into account',
+      'to consider something when you make a decision',
+      'The judge must take into account his age.',
+    ],
+    [
+      'on account of',
+      'because of',
+      'The match was cancelled on account of the weather.',
+    ],
+    [
+      'take advantage of',
+      'to use a situation well, or to use someone unfairly',
+      'Thieves take advantage of empty houses in summer.',
+    ],
+    [
+      'be to blame',
+      'to be responsible for something bad',
+      'Who is going to be to blame for the accident?',
+    ],
+    [
+      'put the blame on',
+      'to say that someone else is responsible',
+      'He tried to put the blame on his brother.',
+    ],
+    [
+      'do damage',
+      'to harm or spoil something',
+      'A storm can do damage to a roof in minutes.',
+    ],
+    [
+      'at fault',
+      'responsible for a mistake or accident',
+      'The other driver was at fault.',
+    ],
+    [
+      'have no intention of',
+      'to not plan to do something',
+      'I have no intention of paying that fine.',
+    ],
+    [
+      'make a mistake',
+      'to do something wrong without meaning to',
+      'Everyone can make a mistake.',
+    ],
+    ['by mistake', 'without meaning to', 'I took your umbrella by mistake.'],
+    [
+      'in order to',
+      'for the purpose of',
+      'He worked at night in order to pay his debts.',
+    ],
+    [
+      'give permission',
+      'to allow someone to do something',
+      'The owner will not give permission to build here.',
+    ],
+    [
+      'on purpose',
+      'deliberately, not by accident',
+      'I am sure he broke the window on purpose.',
+    ],
+    [
+      'reason for',
+      'the cause or explanation of something',
+      'What is the reason for the delay?',
+    ],
+    [
+      'find a solution',
+      'to discover how to deal with a problem',
+      'We must find a solution before the end of the week.',
+    ],
+    [
+      'go wrong',
+      'to stop working or to happen badly',
+      'The plan began to go wrong at once.',
+    ],
+  ],
+  pattern: [
+    [
+      'accuse',
+      'accuse sb of sth / doing',
+      'to say that someone has done something wrong',
+      'They accused him of stealing the money.',
+    ],
+    [
+      'arrest',
+      'arrest sb for sth / doing',
+      'when the police take someone because of a crime',
+      'The police arrested her for driving too fast.',
+    ],
+    [
+      'charge',
+      'charge sb with sth',
+      'to officially say in court that someone has committed a crime',
+      'He was charged with murder.',
+    ],
+    [
+      'claim',
+      'claim to be / do; claim that',
+      'to say that something is true, without proof',
+      'She claims to have seen the thief.',
+    ],
+    [
+      'deny',
+      'deny sth / doing',
+      'to say that something is not true',
+      'He denied breaking the window.',
+    ],
+    [
+      'doubt',
+      'doubt sth; doubt that; doubt if / whether',
+      'to not be sure about something',
+      'I doubt whether she will tell the truth.',
+    ],
+    [
+      'forgive',
+      'forgive sb for sth / doing',
+      'to stop being angry with someone',
+      'I will never forgive him for lying to me.',
+    ],
+    [
+      'glimpse',
+      'glimpse sth; catch a glimpse of sth',
+      'to see something for a very short time',
+      "She caught a glimpse of the man's face.",
+    ],
+    [
+      'guilty',
+      'guilty of sth / doing',
+      'having done something wrong or illegal',
+      'The jury found him guilty of fraud.',
+    ],
+    [
+      'legal',
+      'legal (for sb) to do',
+      'allowed by the law',
+      'It is not legal to drive without a licence.',
+    ],
+    [
+      'make',
+      'make sb do; be made to do',
+      'to force someone to do something',
+      'The teacher made us rewrite the essay.',
+    ],
+    [
+      'refuse',
+      'refuse to do sth; refuse sth',
+      'to say that you will not do or accept something',
+      'The witness refused to answer the question.',
+    ],
+    [
+      'respect',
+      'respect sth; respect sb for sth / doing; have respect for sth / sb',
+      'to admire someone or to treat something with care',
+      'We respect her for telling the truth.',
+    ],
+    [
+      'threaten',
+      'threaten to do; threaten sb with sth',
+      'to say you will hurt someone or cause trouble',
+      'The men threatened him with a knife.',
+    ],
+  ],
+  formation: [
+    [
+      'honest',
+      'dishonest (adjective); honesty (noun); honestly (adverb)',
+      'telling the truth and not cheating',
+      'Honesty is important in a court of law.',
+    ],
+    [
+      'accuse',
+      'accused (adjective / noun); accusation (noun)',
+      'to say that someone has done something wrong',
+      'The accusation was false.',
+    ],
+    [
+      'addict',
+      'addicted (adjective); addictive (adjective); addiction (noun)',
+      'a person who cannot stop a harmful habit',
+      'He is trying to beat his addiction to gambling.',
+    ],
+    [
+      'convict',
+      'convicted (adjective); conviction (noun)',
+      'to decide in court that someone is guilty',
+      'His conviction surprised everyone.',
+    ],
+    [
+      'crime',
+      'criminal (noun / adjective)',
+      'an illegal act',
+      'The criminal was caught within an hour.',
+    ],
+    [
+      'evident',
+      'evidence (noun); evidently (adverb)',
+      'clear and easy to see',
+      'There was not enough evidence to arrest her.',
+    ],
+    [
+      'forge',
+      'forgery (noun); forger (noun)',
+      'to make a false copy of something to cheat people',
+      'The forger copied the painting perfectly.',
+    ],
+    [
+      'investigate',
+      'investigation (noun); investigator (noun); investigative (adjective)',
+      'to try to find out the facts about something',
+      'A full investigation has begun.',
+    ],
+    [
+      'law',
+      'lawyer (noun); lawful (adjective); unlawful (adjective)',
+      'the system of rules of a country',
+      'Selling stolen goods is unlawful.',
+    ],
+    [
+      'murder',
+      'murderer (noun)',
+      'to kill someone on purpose',
+      'The murderer was sent to prison for life.',
+    ],
+    [
+      'offence',
+      'offend (verb); offender (noun); offensive (adjective)',
+      'a crime or an act that breaks a rule',
+      'Parking here is a serious offence.',
+    ],
+    [
+      'prison',
+      'prisoner (noun); imprison (verb); imprisonment (noun)',
+      'a building where criminals are kept',
+      "He was sentenced to ten years' imprisonment.",
+    ],
+    [
+      'prove',
+      'proof (noun); proven (adjective); disprove (verb)',
+      'to show that something is true',
+      'We need proof that he was there.',
+    ],
+    [
+      'rob',
+      'robbery (noun); robber (noun)',
+      'to steal from a person or a place using force',
+      "There was a robbery at the jeweller's.",
+    ],
+    [
+      'secure',
+      'insecure (adjective); security (noun)',
+      'safe and protected from danger',
+      'The bank has very tight security.',
+    ],
+    [
+      'theft',
+      'thief (noun)',
+      'the crime of stealing',
+      'The police are investigating the theft of three cars.',
+    ],
+  ],
+});

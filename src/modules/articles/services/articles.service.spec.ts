@@ -29,7 +29,7 @@ function article(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function setup(found: unknown) {
+function setup(found: unknown, options: { isMember?: boolean } = {}) {
   const prisma = {
     article: {
       findUnique: vi.fn().mockResolvedValue(found),
@@ -43,17 +43,21 @@ function setup(found: unknown) {
     invalidateLists: vi.fn(),
   };
   const revalidator = { revalidate: vi.fn() };
+  const membership = {
+    isMember: vi.fn().mockResolvedValue(options.isMember ?? false),
+  };
   const service = new ArticlesService(
     prisma as never,
     content,
     revisions as never,
     cache as never,
     revalidator as never,
+    membership as never,
   );
-  return { service, prisma, revisions, cache, revalidator };
+  return { service, prisma, revisions, cache, revalidator, membership };
 }
 
-const member: Viewer = { sub: 'reader', role: 'USER' };
+const reader: Viewer = { sub: 'reader', role: 'USER' };
 const author: Viewer = { sub: 'author', role: 'CREATOR' };
 const admin: Viewer = { sub: 'boss', role: 'ADMIN' };
 
@@ -70,7 +74,7 @@ describe('ArticlesService.getBySlug: who sees what', () => {
       await expect(service.getBySlug('hello')).rejects.toThrow(
         NotFoundException,
       );
-      await expect(service.getBySlug('hello', member)).rejects.toThrow(
+      await expect(service.getBySlug('hello', reader)).rejects.toThrow(
         NotFoundException,
       );
     },
@@ -88,15 +92,34 @@ describe('ArticlesService.getBySlug: who sees what', () => {
     expect(result).toMatchObject({ gated: false, contentHtml: html });
   });
 
-  it('cuts a preview article for a guest, full for a member', async () => {
-    const { service } = setup(article({ visibility: 'PREVIEW' }));
+  it('cuts a preview article for a guest and says to sign in', async () => {
+    const { service, membership } = setup(article({ visibility: 'PREVIEW' }));
     const guest = await service.getBySlug('hello');
-    expect(guest).toMatchObject({ gated: true, fullAvailable: true });
+    expect(guest).toMatchObject({
+      gated: true,
+      fullAvailable: true,
+      reason: 'LOGIN',
+    });
     expect(guest).not.toHaveProperty('contentHtml');
     expect((guest as { previewHtml: string }).previewHtml).toBe(
       '<p>1</p><p>2</p><p>3</p>',
     );
-    expect(await service.getBySlug('hello', member)).toMatchObject({
+    expect(membership.isMember).not.toHaveBeenCalled();
+  });
+
+  it('cuts a preview article for a signed-in reader who is not a member', async () => {
+    const { service, membership } = setup(article({ visibility: 'PREVIEW' }));
+    const result = await service.getBySlug('hello', reader);
+    expect(result).toMatchObject({ gated: true, reason: 'MEMBERSHIP' });
+    expect(result).not.toHaveProperty('contentHtml');
+    expect(membership.isMember).toHaveBeenCalledWith('reader');
+  });
+
+  it('gives a member the whole preview article', async () => {
+    const { service } = setup(article({ visibility: 'PREVIEW' }), {
+      isMember: true,
+    });
+    expect(await service.getBySlug('hello', reader)).toMatchObject({
       gated: false,
       contentHtml: html,
     });
@@ -109,15 +132,39 @@ describe('ArticlesService.getBySlug: who sees what', () => {
     const body = (error as UnauthorizedException).getResponse();
     expect(body).toMatchObject({
       gated: true,
+      reason: 'LOGIN',
       title: 'Hello',
       excerpt: 'Short',
     });
     expect(JSON.stringify(body)).not.toContain('<p>');
   });
 
-  it('serves a members-only article to a signed-in user', async () => {
+  it('turns a signed-in non-member away from a members-only article with a 403', async () => {
     const { service } = setup(article({ visibility: 'MEMBERS_ONLY' }));
-    expect((await service.getBySlug('hello', member)).gated).toBe(false);
+    const error = await service
+      .getBySlug('hello', reader)
+      .catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ForbiddenException);
+    const body = (error as ForbiddenException).getResponse();
+    expect(body).toMatchObject({
+      gated: true,
+      reason: 'MEMBERSHIP',
+      title: 'Hello',
+    });
+    expect(JSON.stringify(body)).not.toContain('<p>');
+  });
+
+  it('serves a members-only article to a member', async () => {
+    const { service } = setup(article({ visibility: 'MEMBERS_ONLY' }), {
+      isMember: true,
+    });
+    expect((await service.getBySlug('hello', reader)).gated).toBe(false);
+  });
+
+  it('lets the author and admins read a limited article without membership', async () => {
+    const { service } = setup(article({ visibility: 'MEMBERS_ONLY' }));
+    expect((await service.getBySlug('hello', author)).gated).toBe(false);
+    expect((await service.getBySlug('hello', admin)).gated).toBe(false);
   });
 });
 
@@ -176,7 +223,7 @@ describe('ArticlesService.publish', () => {
 
   it("refuses someone else's article", async () => {
     const { service } = setup(row());
-    await expect(service.publish(member, 'a1')).rejects.toThrow(
+    await expect(service.publish(reader, 'a1')).rejects.toThrow(
       ForbiddenException,
     );
   });
@@ -226,6 +273,7 @@ describe('ArticlesService: topics, type and duplicate', () => {
       revisions as never,
       { getOrSet: vi.fn(), invalidateLists: vi.fn() } as never,
       { revalidate: vi.fn() } as never,
+      { isMember: vi.fn().mockResolvedValue(false) } as never,
     );
     return { service, prisma, revisions };
   }
@@ -308,7 +356,7 @@ describe('ArticlesService: topics, type and duplicate', () => {
   it("does not let someone duplicate another author's article", async () => {
     const { service, prisma } = setupWrite();
     prisma.article.findUnique.mockResolvedValue(article());
-    await expect(service.duplicate(member, 'a1')).rejects.toThrow(
+    await expect(service.duplicate(reader, 'a1')).rejects.toThrow(
       ForbiddenException,
     );
     expect(prisma.article.create).not.toHaveBeenCalled();

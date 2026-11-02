@@ -69,6 +69,7 @@ export class AdminService {
           createdAt: true,
           password: true,
           totp: { select: { enabled: true } },
+          membership: { select: { expiresAt: true } },
           accounts: { select: { provider: true } },
           loginHistory: {
             orderBy: { createdAt: 'desc' },
@@ -81,9 +82,11 @@ export class AdminService {
     ]);
     return {
       items: items.map(
-        ({ totp, password, accounts, loginHistory, ...user }) => ({
+        ({ totp, password, accounts, loginHistory, membership, ...user }) => ({
           ...user,
           totpEnabled: totp?.enabled ?? false,
+          isMember: !!membership && membership.expiresAt.getTime() > Date.now(),
+          membershipExpiresAt: membership?.expiresAt ?? null,
           providers: providersOf(accounts, password !== null),
           lastLoginAt: loginHistory[0]?.createdAt ?? null,
         }),
@@ -108,6 +111,7 @@ export class AdminService {
         updatedAt: true,
         password: true,
         totp: { select: { enabled: true, enabledAt: true } },
+        membership: { select: { expiresAt: true, source: true } },
         accounts: { select: { provider: true } },
         loginHistory: {
           orderBy: { createdAt: 'desc' },

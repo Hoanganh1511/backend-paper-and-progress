@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ═══════ M1: Auth ═══════
@@ -20,24 +21,26 @@ model User {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  accounts       Account[]
-  profile        UserProfile?
-  refreshTokens  RefreshToken[]
-  loginHistory   LoginHistory[]
-  totp           UserTotp?
-  securityEvents SecurityEvent[]
-  todos          Todo[]
-  dailyProgress  UserDailyProgress[]
-  wordReviews    WordReview[]
-  phrases        Phrase[]
-  phraseActivity PhraseActivityDay[]
-  articles       Article[]
-  comments       Comment[]
-  reactions      Reaction[]
-  bookmarks      Bookmark[]
-  topicFollows   TopicFollow[]
-  pathProgress   UserPathProgress[]
-  stepProgress   UserStepProgress[]
+  accounts         Account[]
+  profile          UserProfile?
+  refreshTokens    RefreshToken[]
+  loginHistory     LoginHistory[]
+  totp             UserTotp?
+  securityEvents   SecurityEvent[]
+  todos            Todo[]
+  dailyProgress    UserDailyProgress[]
+  wordReviews      WordReview[]
+  phrases          Phrase[]
+  phraseActivity   PhraseActivityDay[]
+  articles         Article[]
+  comments         Comment[]
+  reactions        Reaction[]
+  bookmarks        Bookmark[]
+  topicFollows     TopicFollow[]
+  pathProgress     UserPathProgress[]
+  stepProgress     UserStepProgress[]
+  membership       Membership?
+  membershipOrders MembershipOrder[]
 }
 
 enum Role {
@@ -802,4 +805,53 @@ model UserStepProgress {
 
   @@id([userId, stepId])
   @@index([stepId])
+}
+
+/// Hội viên: người có `expiresAt` còn trong tương lai đọc được toàn bộ bài viết giới hạn.
+enum MembershipSource {
+  ADMIN
+  PAYMENT
+}
+
+model Membership {
+  userId    String           @id
+  expiresAt DateTime
+  source    MembershipSource @default(ADMIN)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum MembershipPlan {
+  MONTH
+  YEAR
+}
+
+enum MembershipOrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+/// Đơn đăng ký hội viên trả bằng chuyển khoản VietQR. `code` là nội dung chuyển khoản; admin đối chiếu rồi xác nhận.
+model MembershipOrder {
+  id             String                @id @default(uuid())
+  userId         String
+  plan           MembershipPlan
+  months         Int
+  amount         Int
+  code           String                @unique
+  status         MembershipOrderStatus @default(PENDING)
+  createdAt      DateTime              @default(now())
+  paidAt         DateTime?
+  /// Mã giao dịch của ngân hàng (Casso) đã trả cho đơn này; một giao dịch chỉ trả được một đơn.
+  paymentRef     String?               @unique
+  /// Số tiền thực nhận khi đơn được xác nhận tự động.
+  receivedAmount Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([status, createdAt])
 }

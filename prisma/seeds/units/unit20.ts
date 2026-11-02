@@ -1,0 +1,435 @@
+// Unit 20: Weather and the environment. Headwords follow the book's list;
+// meanings and examples are short, original ones.
+import { unitFromRows } from '../vocabulary-helpers.ts';
+
+export const unit20 = unitFromRows(20, 'Weather and the environment', {
+  contrast: [
+    [
+      'urban',
+      'suburban / rural',
+      'connected with towns and cities',
+      'Urban areas are often noisier than the countryside.',
+    ],
+    [
+      'clean',
+      'clear',
+      'free from dirt or harmful substances',
+      'We need clean air and clean water.',
+    ],
+    [
+      'thunder',
+      'lightning',
+      'the loud noise heard in the sky during a storm',
+      'The thunder was so loud that the baby woke up.',
+    ],
+    [
+      'smog',
+      'fog / smoke / mist',
+      'dirty air made of smoke and fog over a city',
+      'Heavy smog covered the city for three days.',
+    ],
+    [
+      'drizzle',
+      'pour / flood',
+      'light rain with very small drops',
+      'A light drizzle fell all morning.',
+    ],
+    [
+      'global',
+      'worldwide',
+      'affecting the whole world',
+      'Global warming is a serious problem.',
+    ],
+    [
+      'climate',
+      'weather',
+      'the usual weather conditions of a region over many years',
+      'The climate here is warm and dry.',
+    ],
+    [
+      'environment',
+      'surroundings',
+      'the natural world of land, air, water, plants and animals',
+      'Plastic bags harm the environment.',
+    ],
+    [
+      'desert',
+      'plain / land / field',
+      'a large dry area with very little rain',
+      'Few animals can live in the desert.',
+    ],
+    [
+      'forecast',
+      'prediction',
+      'a statement about what the weather will be',
+      'The forecast says it will snow tomorrow.',
+    ],
+    [
+      'wind',
+      'air',
+      'air that moves outside',
+      'A strong wind blew down several trees.',
+    ],
+    [
+      'extinct',
+      'endangered',
+      'no longer existing anywhere in the world',
+      'Dinosaurs have been extinct for millions of years.',
+    ],
+    [
+      'litter',
+      'waste / rubbish',
+      'rubbish left in a public place',
+      'Please do not drop litter in the park.',
+    ],
+    [
+      'puddle',
+      'reservoir / lake / pond',
+      'a small pool of rainwater on the ground',
+      'The child jumped into every puddle.',
+    ],
+    [
+      'recycle',
+      'reuse',
+      'to treat used materials so they can be used again',
+      'We recycle paper, glass and plastic.',
+    ],
+  ],
+  phrasal: [
+    [
+      'call for',
+      'to require or demand something',
+      'The situation will call for urgent action.',
+    ],
+    [
+      'get down',
+      'to make someone feel sad or hopeless',
+      'The grey weather can get down even cheerful people.',
+    ],
+    [
+      'call off',
+      'to cancel an event',
+      'They had to call off the match because of the snow.',
+    ],
+    [
+      'put down to',
+      'to say that something is the result of something',
+      'The experts put down to climate change the rise in storms.',
+    ],
+    [
+      'clear up',
+      'to become brighter and better (weather)',
+      'I hope the weather will clear up by noon.',
+    ],
+    [
+      'put out',
+      'to make a fire stop burning',
+      'It took hours to put out the forest fire.',
+    ],
+    [
+      'cut off',
+      'to make a place difficult or impossible to reach',
+      'Heavy snow can cut off small villages.',
+    ],
+    [
+      'set in',
+      'to start and be likely to continue for a while',
+      'Winter seems to set in earlier every year.',
+    ],
+    [
+      'stand for',
+      'to represent something (an abbreviation or symbol)',
+      'What does the letter C stand for?',
+    ],
+    [
+      'die down',
+      'to become less noisy, powerful or active',
+      'We waited for the storm to die down.',
+    ],
+    [
+      'put up with',
+      'to accept something annoying without complaining',
+      'We have to put up with the heat in July.',
+    ],
+    [
+      'do up',
+      'to repair, paint or improve a building',
+      'They want to do up the old farmhouse.',
+    ],
+    [
+      'tear down',
+      'to destroy or remove a building',
+      'The council plans to tear down the old factory.',
+    ],
+    [
+      'face up to',
+      'to accept a problem and try to deal with it',
+      'We must face up to the problem of pollution.',
+    ],
+    [
+      'throw away',
+      'to get rid of something you do not want',
+      'Do not throw away plastic bottles; recycle them.',
+    ],
+  ],
+  collocation: [
+    [
+      'lose control',
+      'to be unable to manage something',
+      'The driver may lose control on icy roads.',
+    ],
+    [
+      'in control',
+      'managing something successfully',
+      'The firefighters are now in control of the fire.',
+    ],
+    [
+      'have an effect',
+      'to cause a change in something',
+      'Pollution can have an effect on our health.',
+    ],
+    [
+      'in the end',
+      'finally, after a long time',
+      'In the end the rain stopped.',
+    ],
+    [
+      'on the ground floor',
+      'on the level of a building at street height',
+      'The shop is on the ground floor.',
+    ],
+    [
+      'make a fuss',
+      'to complain or show too much excitement about something small',
+      'Do not make a fuss about a little rain.',
+    ],
+    [
+      'as long as',
+      'on condition that',
+      'We will go hiking as long as it does not rain.',
+    ],
+    [
+      'take a long time',
+      'to need many hours or years',
+      'It will take a long time to clean the river.',
+    ],
+    ['have a look', 'to look at something briefly', 'Have a look at the sky.'],
+    [
+      'make a mess',
+      'to make a place dirty or untidy',
+      'Tourists make a mess of the beach.',
+    ],
+    [
+      'take responsibility',
+      'to accept that something is your duty',
+      'We must all take responsibility for the planet.',
+    ],
+    [
+      'take a shower',
+      'to wash yourself under running water',
+      'I take a shower every morning.',
+    ],
+    [
+      'lose sight of',
+      'to no longer be able to see',
+      'The ship began to lose sight of the shore.',
+    ],
+    [
+      'at first sight',
+      'when you first see something',
+      'At first sight the lake looked clean.',
+    ],
+    [
+      'a waste of time',
+      'something that does not use your time well',
+      'Arguing about the weather is a waste of time.',
+    ],
+    [
+      'weather forecast',
+      'a report about the coming weather',
+      'Did you hear the weather forecast?',
+    ],
+    [
+      'under the weather',
+      'feeling slightly ill',
+      'I feel a bit under the weather today.',
+    ],
+    [
+      'all over the world',
+      'in every part of the planet',
+      'People all over the world are worried about the climate.',
+    ],
+  ],
+  pattern: [
+    [
+      'aware',
+      'aware of sth; aware that',
+      'knowing that something exists or is happening',
+      'Few people are aware of the danger.',
+    ],
+    [
+      'covered',
+      'covered in / with sth',
+      'having a layer of something on top',
+      'The hills were covered in snow.',
+    ],
+    [
+      'disappointed',
+      'disappointed with / by sth; disappointed in sb',
+      'sad because something was not as good as you hoped',
+      'We were disappointed with the weather.',
+    ],
+    [
+      'except',
+      'except (for) sth / doing',
+      'not including someone or something',
+      'It rained every day except Sunday.',
+    ],
+    [
+      'expect',
+      'expect sth / sb (to do); expect that',
+      'to think that something will happen',
+      'We expect heavy rain tomorrow.',
+    ],
+    [
+      'familiar',
+      'familiar with sth; familiar to sb',
+      'knowing something well',
+      'Are you familiar with the local climate?',
+    ],
+    [
+      'famous',
+      'famous for sth / doing',
+      'known by many people because of something',
+      'The region is famous for its mild winters.',
+    ],
+    [
+      'glance',
+      'glance at sth / sb',
+      'to look quickly at something',
+      'He glanced at the sky and took an umbrella.',
+    ],
+    [
+      'hard',
+      'hard to do; hard doing',
+      'difficult to do',
+      'It is hard to breathe in this smog.',
+    ],
+    [
+      'prevent',
+      'prevent sth; prevent sb from doing; prevent sth from happening',
+      'to stop something from happening',
+      'Trees help to prevent floods.',
+    ],
+    [
+      'short',
+      'short of sth; short on sth',
+      'not having enough of something',
+      'The village is short of clean water.',
+    ],
+    [
+      'warn',
+      'warn sb about / against sth / doing; warn sb of sth; warn sb not to do; warn (sb) that',
+      'to tell someone about a possible danger',
+      'Scientists warn that sea levels will rise.',
+    ],
+  ],
+  formation: [
+    [
+      'accurate',
+      'accurately (adverb); inaccurate (adjective); accuracy (noun)',
+      'correct and exact',
+      'The forecast was not very accurate.',
+    ],
+    [
+      'danger',
+      'dangerous (adjective); endanger (verb); endangered (adjective)',
+      'the possibility of harm',
+      'Many species are endangered by hunting.',
+    ],
+    [
+      'develop',
+      'developed (adjective); developing (adjective); development (noun); developer (noun)',
+      'to grow or change into something bigger',
+      'The development of the coast worries local people.',
+    ],
+    [
+      'environment',
+      'environmental (adjective); environmentally (adverb); environmentalist (noun)',
+      'the natural world',
+      'She is an environmentalist who fights pollution.',
+    ],
+    [
+      'extreme',
+      'extremely (adverb); extremity (noun); extremist (noun)',
+      'very great in degree',
+      'It was extremely cold last night.',
+    ],
+    [
+      'freeze',
+      'froze (past); frozen (adjective); freezing (adjective); freezer (noun)',
+      'to turn into ice because of the cold',
+      'The lake froze in January.',
+    ],
+    [
+      'globe',
+      'global (adjective); globally (adverb)',
+      'the Earth',
+      'Temperatures are rising globally.',
+    ],
+    [
+      'great',
+      'greatly (adverb); greatness (noun)',
+      'very big or important',
+      'The storm greatly damaged the crops.',
+    ],
+    [
+      'harm',
+      'harmful (adjective); harmless (adjective); harmed (adjective)',
+      'damage or injury',
+      'Smoke is harmful to your lungs.',
+    ],
+    [
+      'likely',
+      'unlikely (adjective); likelihood (noun)',
+      'probably going to happen',
+      'It is unlikely that it will snow in May.',
+    ],
+    [
+      'nature',
+      'natural (adjective); unnatural (adjective); naturally (adverb)',
+      'the plants, animals and weather of the world',
+      'Natural resources must be protected.',
+    ],
+    [
+      'neighbour',
+      'neighbourly (adjective); neighbouring (adjective); neighbourhood (noun)',
+      'a person who lives near you',
+      'The neighbouring town was flooded.',
+    ],
+    [
+      'pollute',
+      'polluted (adjective); unpolluted (adjective); pollution (noun); pollutant (noun)',
+      'to make air, water or land dirty',
+      'The river is polluted by waste from the factory.',
+    ],
+    [
+      'reside',
+      'residential (adjective); resident (noun); residence (noun)',
+      'to live in a particular place',
+      'The residents complained about the noise.',
+    ],
+    [
+      'low',
+      'lower (adjective); lowness (noun)',
+      'not high',
+      'Temperatures are lower than usual for this time of year.',
+    ],
+    [
+      'sun',
+      'sunny (adjective); sunshine (noun)',
+      'the star that gives us light and heat',
+      'We enjoyed three hours of sunshine.',
+    ],
+  ],
+});

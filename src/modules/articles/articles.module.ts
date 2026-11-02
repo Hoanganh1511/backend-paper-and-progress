@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { MembershipModule } from '../membership/membership.module.js';
 import { ArticlesTasks } from './articles.tasks.js';
 import { AnalyticsController } from './controllers/analytics.controller.js';
 import { ArticlesController } from './controllers/articles.controller.js';
@@ -24,6 +25,7 @@ import { UploadService } from './services/upload.service.js';
 
 @Module({
   imports: [
+    MembershipModule,
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
   ],

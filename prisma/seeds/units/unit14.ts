@@ -1,0 +1,438 @@
+// Unit 14: Health and fitness. Headwords follow the book's list; meanings and
+// examples are short, original ones.
+import { unitFromRows } from '../vocabulary-helpers.ts';
+
+export const unit14 = unitFromRows(14, 'Health and fitness', {
+  contrast: [
+    [
+      'prescription',
+      'recipe',
+      'a paper from a doctor that lets you buy a medicine',
+      'The doctor wrote me a prescription for the cough.',
+    ],
+    [
+      'thin',
+      'slim',
+      'having little fat on the body, often in an unhealthy way',
+      'He looks very thin since his illness.',
+    ],
+    [
+      'infection',
+      'pollution',
+      'a disease caused by germs',
+      'A dirty cut can lead to an infection.',
+    ],
+    [
+      'operation',
+      'surgery',
+      'medical treatment in which a doctor cuts into your body',
+      'She needs an operation on her knee.',
+    ],
+    [
+      'remedy',
+      'cure / therapy',
+      'a treatment that makes a small illness better',
+      'Honey and lemon is a good remedy for a sore throat.',
+    ],
+    [
+      'plaster',
+      'bandage',
+      'a small piece of sticky material that covers a cut',
+      'Put a plaster on that cut.',
+    ],
+    [
+      'sore',
+      'hurt / pain',
+      'painful when touched or used',
+      'My feet are sore after the long walk.',
+    ],
+    [
+      'effect',
+      'result',
+      'a change caused by something, such as a drug',
+      'The medicine has a strong effect on me.',
+    ],
+    [
+      'ward',
+      'clinic',
+      'a room in a hospital where patients stay',
+      "She works on the children's ward.",
+    ],
+    [
+      'illness',
+      'disease',
+      'a period of being ill',
+      'He missed school because of a long illness.',
+    ],
+    [
+      'healthy',
+      'fit',
+      'in good condition and not ill',
+      'Fruit and vegetables are part of a healthy diet.',
+    ],
+    [
+      'dose',
+      'fix',
+      'the amount of medicine you take at one time',
+      'Do not take more than the recommended dose.',
+    ],
+    [
+      'injured',
+      'damaged',
+      'hurt in an accident or fight',
+      'Three people were injured in the crash.',
+    ],
+    [
+      'examine',
+      'investigate',
+      'to look at a patient carefully to find out what is wrong',
+      'The doctor will examine you in a moment.',
+    ],
+    [
+      'fever',
+      'rash',
+      'a high body temperature when you are ill',
+      'The child had a fever and a headache.',
+    ],
+  ],
+  phrasal: [
+    [
+      'break out',
+      'to start suddenly (a war, a fire or a disease)',
+      'A fire can break out in a matter of seconds.',
+    ],
+    [
+      'give up',
+      'to stop doing something you do regularly',
+      'It is hard to give up smoking.',
+    ],
+    [
+      'bring on',
+      'to cause an illness or a problem',
+      'Stress can bring on a headache.',
+    ],
+    [
+      'look after',
+      'to take care of someone or something',
+      'Who will look after you when you are ill?',
+    ],
+    [
+      'come down with',
+      'to start to suffer from a minor illness',
+      'I think I am going to come down with a cold.',
+    ],
+    [
+      'pass out',
+      'to suddenly become unconscious',
+      'Some people pass out at the sight of blood.',
+    ],
+    [
+      'come round',
+      'to become conscious again',
+      'It took him a few minutes to come round after the fall.',
+    ],
+    [
+      'pull through',
+      'to survive a serious illness',
+      'The doctors think she will pull through.',
+    ],
+    [
+      'cut down',
+      'to do less of something, to reduce an amount',
+      'You should cut down on sugar.',
+    ],
+    [
+      'put down',
+      'to kill a sick or old animal',
+      'The vet decided to put down the old horse.',
+    ],
+    [
+      'feel up to',
+      'to feel well enough to do something',
+      'I do not feel up to going out tonight.',
+    ],
+    ['put on', 'to gain weight', 'I tend to put on weight in winter.'],
+    [
+      'get over',
+      'to recover from an illness',
+      'It took her a week to get over the flu.',
+    ],
+    [
+      'wear off',
+      'to stop being effective (a drug)',
+      'The pain will return when the medicine begins to wear off.',
+    ],
+  ],
+  collocation: [
+    [
+      'alternative medicine',
+      'treatment that is not part of normal Western medicine',
+      'Some people try alternative medicine for back pain.',
+    ],
+    [
+      'make an appointment',
+      'to arrange a time to see someone',
+      'I need to make an appointment with the dentist.',
+    ],
+    [
+      'break an appointment',
+      'to fail to go to a meeting you arranged',
+      'Do not break an appointment without telling the doctor.',
+    ],
+    [
+      'have a bath',
+      'to wash yourself in a bath',
+      'I like to have a bath before bed.',
+    ],
+    [
+      'run a bath',
+      'to fill a bath with water',
+      'Can you run a bath for the baby?',
+    ],
+    [
+      'in danger',
+      'likely to be harmed',
+      'His life was in danger for several days.',
+    ],
+    [
+      'out of danger',
+      'no longer likely to be harmed',
+      'The patient is now out of danger.',
+    ],
+    [
+      'take exercise',
+      'to do physical activity to stay healthy',
+      'You should take exercise every day.',
+    ],
+    [
+      'keep fit',
+      'to stay healthy by doing sport',
+      'She swims twice a week to keep fit.',
+    ],
+    [
+      'be good for',
+      'to be helpful to your health',
+      'Walking will be good for you.',
+    ],
+    [
+      'in good health',
+      'healthy',
+      'My grandfather is in good health for his age.',
+    ],
+    [
+      'have an injection',
+      'to be given medicine with a needle',
+      'Children have an injection against measles.',
+    ],
+    [
+      'take medicine',
+      'to swallow a drug to treat an illness',
+      'Remember to take medicine after meals.',
+    ],
+    [
+      'get in shape',
+      'to become fit and healthy',
+      'He joined a gym to get in shape.',
+    ],
+    [
+      'stay in shape',
+      'to remain fit and healthy',
+      'It is not easy to stay in shape at my age.',
+    ],
+    [
+      'spread to',
+      'to move from one place or person to another',
+      'The disease began to spread to other villages.',
+    ],
+  ],
+  pattern: [
+    [
+      'addicted',
+      'addicted to sth',
+      'unable to stop doing or taking something',
+      'He is addicted to chocolate.',
+    ],
+    [
+      'attempt',
+      'attempt to do',
+      'to try to do something difficult',
+      'She attempted to lift the heavy box.',
+    ],
+    [
+      'benefit',
+      'benefit from sth; a benefit of sth',
+      'to be helped by something',
+      "You will benefit from a good night's sleep.",
+    ],
+    [
+      'complain',
+      'complain (to sb) about sth; complain of sth',
+      'to say that you are unhappy or in pain',
+      'He complained of a headache.',
+    ],
+    [
+      'cope',
+      'cope with sth / doing',
+      'to deal with a difficult situation',
+      'She finds it hard to cope with stress.',
+    ],
+    [
+      'inject',
+      'inject sth into sth / sb',
+      'to put medicine into the body with a needle',
+      'The nurse injected the drug into his arm.',
+    ],
+    [
+      'lead',
+      'lead to sth / (your) doing',
+      'to cause something to happen',
+      'Too much sun can lead to skin cancer.',
+    ],
+    [
+      'likely',
+      'likely to do; it is (un)likely that',
+      'probably going to happen',
+      'You are likely to feel better soon.',
+    ],
+    [
+      'need',
+      'need to do; need doing; in need of; no need for',
+      'to require something',
+      'The room needs cleaning.',
+    ],
+    [
+      'operate',
+      'operate on sb / sth',
+      'to cut into the body to treat it',
+      'Doctors will operate on his heart tomorrow.',
+    ],
+    [
+      'suffer',
+      'suffer from sth; suffer sth',
+      'to experience pain or illness',
+      'She suffers from back pain.',
+    ],
+    [
+      'tired',
+      'tired of sth / doing',
+      'bored with something that you have done too long',
+      'I am tired of eating the same food.',
+    ],
+    [
+      'try',
+      'try to do; try sth / sb / doing; try and do',
+      'to make an effort, or to test something',
+      'Try drinking some warm milk.',
+    ],
+    [
+      'worry',
+      'worry about sth / sb doing; worried that; worried about / by',
+      'to feel anxious about something',
+      'Do not worry about the result.',
+    ],
+    [
+      'worth',
+      'worth sth / doing',
+      'good enough to deserve a particular action',
+      'The museum is worth visiting.',
+    ],
+  ],
+  formation: [
+    [
+      'allergy',
+      'allergic (adjective)',
+      'a medical condition in which something makes you ill',
+      'I am allergic to nuts.',
+    ],
+    [
+      'ill',
+      'illness (noun)',
+      'not feeling well',
+      'His illness lasted three weeks.',
+    ],
+    [
+      'aware',
+      'unaware (adjective); awareness (noun)',
+      'knowing that something exists',
+      'Awareness of healthy eating is growing.',
+    ],
+    [
+      'benefit',
+      'beneficial (adjective)',
+      'an advantage or help from something',
+      'Exercise is beneficial for the heart.',
+    ],
+    [
+      'strong',
+      'strength (noun); strengthen (verb); strongly (adverb)',
+      'having a lot of physical power',
+      'These exercises will strengthen your legs.',
+    ],
+    [
+      'comfort',
+      'discomfort (noun); comfortable (adjective); uncomfortable (adjective)',
+      'a feeling of being relaxed and free from pain',
+      'The patient felt some discomfort in his chest.',
+    ],
+    [
+      'injure',
+      'injury (noun); injuries (plural noun)',
+      'to hurt a part of the body',
+      'She missed the match because of an injury.',
+    ],
+    [
+      'operate',
+      'operation (noun); operator (noun); operating (adjective)',
+      'to cut into the body to treat it',
+      'He recovered well after the operation.',
+    ],
+    [
+      'emphasis',
+      'emphasise (verb); emphatic (adjective)',
+      'special importance given to something',
+      'The doctor emphasised the need for rest.',
+    ],
+    [
+      'fit',
+      'unfit (adjective); fitness (noun)',
+      'in good physical condition',
+      'His fitness improved quickly.',
+    ],
+    [
+      'recover',
+      'recovery (noun)',
+      'to become well again after an illness',
+      'We wish you a quick recovery.',
+    ],
+    [
+      'inject',
+      'injection (noun)',
+      'to put a liquid into the body with a needle',
+      'I hate having an injection.',
+    ],
+    [
+      'surgery',
+      'surgeon (noun); surgical (adjective); surgically (adverb)',
+      'treatment that involves cutting the body',
+      'The surgeon operated for six hours.',
+    ],
+    [
+      'treat',
+      'treatment (noun)',
+      'to give medical care to a person',
+      'The treatment lasted several weeks.',
+    ],
+    [
+      'poison',
+      'poisonous (adjective); poisoning (noun)',
+      'a substance that can make you ill or kill you',
+      'Some mushrooms are poisonous.',
+    ],
+    [
+      'cooperate',
+      'cooperation (noun); cooperative (adjective); uncooperative (adjective)',
+      'to work together with someone',
+      'The patient was very cooperative.',
+    ],
+  ],
+});

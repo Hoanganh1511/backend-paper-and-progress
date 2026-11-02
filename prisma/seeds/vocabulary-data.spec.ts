@@ -14,7 +14,9 @@ describe('vocabulary data', () => {
   });
 
   it('has words in all five sections of the units that are written', () => {
-    expect(filled.map((unit) => unit.unitNumber)).toEqual([2, 4, 6, 8]);
+    expect(filled.map((unit) => unit.unitNumber)).toEqual([
+      2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28,
+    ]);
     for (const unit of filled) {
       for (const section of SECTIONS) {
         expect(

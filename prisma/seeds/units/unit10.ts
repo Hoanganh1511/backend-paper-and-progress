@@ -1,0 +1,431 @@
+// Unit 10: People and society. Headwords follow the book's list; meanings and
+// examples are short, original ones.
+import { unitFromRows } from '../vocabulary-helpers.ts';
+
+export const unit10 = unitFromRows(10, 'People and society', {
+  contrast: [
+    [
+      'relationship',
+      'connection',
+      'the way two people feel and behave towards each other',
+      'She has a very close relationship with her sister.',
+    ],
+    [
+      'support',
+      'assist',
+      'to help someone by being on their side',
+      'My parents always support me when I make a decision.',
+    ],
+    [
+      'company',
+      'group',
+      'being with other people so you are not alone',
+      'I enjoy his company because he is so cheerful.',
+    ],
+    [
+      'blame',
+      'fault',
+      'to say that someone is responsible for something bad',
+      'Do not blame me for the mistake.',
+    ],
+    [
+      'kind',
+      'polite',
+      'friendly and caring towards other people',
+      'It was kind of you to lend me your umbrella.',
+    ],
+    [
+      'popular',
+      'famous',
+      'liked by many people',
+      'He is the most popular boy in our class.',
+    ],
+    [
+      'ancient',
+      'old',
+      'from a very long time ago in history',
+      'They visited the ancient ruins of a Roman city.',
+    ],
+    [
+      'sympathetic',
+      'likeable',
+      "showing that you understand and care about someone's problems",
+      'My teacher was very sympathetic when I was ill.',
+    ],
+    [
+      'typical',
+      'usual / ordinary',
+      'showing the usual features of a type of person or thing',
+      'It was a typical English summer, cold and wet.',
+    ],
+    [
+      'crowd',
+      'audience',
+      'a large number of people in one place',
+      'A huge crowd gathered outside the stadium.',
+    ],
+    [
+      'bad-tempered',
+      'nervous',
+      'getting angry easily',
+      'My grandfather gets bad-tempered when he is tired.',
+    ],
+    [
+      'close',
+      'near',
+      'very friendly and knowing each other well',
+      'We have been close friends since school.',
+    ],
+    [
+      'please',
+      'enjoy',
+      'to make someone feel happy or satisfied',
+      'It is hard to please everyone at a big party.',
+    ],
+    [
+      'sensitive',
+      'sensible',
+      'easily hurt or upset by what people say',
+      'Be careful what you say, because he is very sensitive.',
+    ],
+    [
+      'infamous',
+      'unknown',
+      'famous for something bad',
+      'The king was infamous for his cruelty.',
+    ],
+  ],
+  phrasal: [
+    [
+      'ask after',
+      "to ask for news about someone's health or life",
+      'Please ask after my uncle when you see him.',
+    ],
+    [
+      'bring up',
+      'to look after a child until he or she is an adult',
+      'Her grandparents helped to bring up the children.',
+    ],
+    [
+      'fall for',
+      'to fall in love with someone, or to believe a trick',
+      'He did not fall for the old trick this time.',
+    ],
+    [
+      'fall out',
+      'to have an argument and stop being friends',
+      'The two brothers fall out over every little thing.',
+    ],
+    [
+      'get on',
+      'to have a good relationship with someone',
+      'I get on well with my new colleagues.',
+    ],
+    ['grow up', 'to become an adult', 'I want to be a doctor when I grow up.'],
+    [
+      'look down on',
+      'to think that you are better than someone',
+      'You should never look down on people who have less money.',
+    ],
+    [
+      'look up to',
+      'to admire and respect someone',
+      'Young players look up to the captain of the team.',
+    ],
+    [
+      'make up',
+      'to become friends again after an argument',
+      'They had a fight but soon decided to make up.',
+    ],
+    [
+      'pass away',
+      'a polite way of saying someone has died',
+      'Sadly, his grandmother may pass away soon.',
+    ],
+    [
+      'pick on',
+      'to treat someone badly or unfairly again and again',
+      'Older children should not pick on the little ones.',
+    ],
+    [
+      'put down',
+      'to criticise someone and make them feel stupid',
+      'It is cruel to put down a person in front of others.',
+    ],
+    [
+      'settle down',
+      'to start a calm life in one place, often by getting married',
+      'After years of travelling, he wants to settle down.',
+    ],
+    [
+      'stand up for',
+      'to support someone or something in an argument',
+      'You must stand up for what you believe in.',
+    ],
+    [
+      'take aback',
+      'to surprise someone, usually in an unpleasant way',
+      'The rude reply was enough to take aback the whole room.',
+    ],
+  ],
+  collocation: [
+    [
+      'meet with approval',
+      'to be accepted and liked by others',
+      'I hope the new plan will meet with approval.',
+    ],
+    [
+      'have an argument',
+      'to disagree angrily with someone',
+      'My parents rarely have an argument.',
+    ],
+    [
+      'win an argument',
+      'to prove that your opinion is right',
+      'He always tries to win an argument at any cost.',
+    ],
+    [
+      'take care of',
+      'to look after someone or something',
+      'Who will take care of the dog while we are away?',
+    ],
+    [
+      'have the courage',
+      'to be brave enough to do something difficult',
+      'She did not have the courage to tell him the truth.',
+    ],
+    [
+      'in disguise',
+      'dressed or hidden so that people do not recognise you',
+      'The prince travelled through the town in disguise.',
+    ],
+    [
+      'have a dream',
+      'to want something very much for your future',
+      'I have a dream of living by the sea.',
+    ],
+    [
+      'start a family',
+      'to have your first child',
+      'They want to buy a house before they start a family.',
+    ],
+    [
+      'extended family',
+      'parents, children, grandparents, aunts, uncles and cousins together',
+      'The whole extended family met for the holiday.',
+    ],
+    [
+      'in favour of',
+      'supporting an idea or plan',
+      'Are you in favour of the new school rules?',
+    ],
+    [
+      'make friends',
+      'to start a friendship with someone',
+      'It is easy to make friends at university.',
+    ],
+    [
+      'best friend',
+      'the friend you like most',
+      'My best friend lives next door to me.',
+    ],
+    [
+      'fall in love',
+      'to begin to love someone',
+      'It is easy to fall in love on holiday.',
+    ],
+    [
+      'in a good mood',
+      'feeling cheerful and happy',
+      'The boss is in a good mood today.',
+    ],
+    [
+      'take pity on',
+      'to help someone because you feel sorry for them',
+      'Many people will take pity on a lost child.',
+    ],
+    [
+      'break a promise',
+      'to fail to do what you said you would do',
+      'A true friend will never break a promise.',
+    ],
+  ],
+  pattern: [
+    [
+      'agree',
+      'agree with sb; agree on / to sth; agree to do; agree that',
+      'to have the same opinion or accept a plan',
+      'We agreed to meet at noon.',
+    ],
+    [
+      'allow',
+      'allow sb to do; allow sth',
+      'to let someone do something',
+      'My parents allow me to stay out until ten.',
+    ],
+    [
+      'approve',
+      'approve of sth / doing; approve sth',
+      'to think something is good or right',
+      'My mother does not approve of smoking.',
+    ],
+    [
+      'ask',
+      'ask sb sth; ask sb to do; ask about / for sth; ask if / whether',
+      'to put a question or make a request',
+      'I asked him to turn the music down.',
+    ],
+    [
+      'attack',
+      'attack sth / sb; attack sb for sth / doing; an attack on sth',
+      'to use force or criticism against someone',
+      'The newspapers attacked the minister for lying.',
+    ],
+    [
+      'ban',
+      'ban sb from sth / doing; ban sth',
+      'to officially say that something is not allowed',
+      'The school banned him from playing for a month.',
+    ],
+    [
+      'convince',
+      'convince sb of sth; convince sb to do; convince sb that',
+      'to make someone believe something',
+      'I could not convince her to change her mind.',
+    ],
+    [
+      'force',
+      'force sb to do sth; force sb into sth / doing',
+      'to make someone do what they do not want to do',
+      'The rain forced us to stay indoors.',
+    ],
+    [
+      'independent',
+      'independent of / from sth',
+      'not controlled or helped by someone else',
+      'She wants to be independent of her parents.',
+    ],
+    [
+      'let',
+      'let sb do sth',
+      'to allow someone to do something',
+      'Please let me explain what happened.',
+    ],
+    [
+      'object',
+      'object to sth / doing',
+      'to say that you do not like or agree with something',
+      'Many residents object to the new road.',
+    ],
+    [
+      'pretend',
+      'pretend to be; pretend to do; pretend that',
+      'to behave as if something is true when it is not',
+      'The children pretended to be asleep.',
+    ],
+    [
+      'rely',
+      'rely on sth / sb',
+      'to depend on someone or something',
+      'You can rely on me to keep a secret.',
+    ],
+  ],
+  formation: [
+    [
+      'able',
+      'unable (adjective); ability (noun); disabled (adjective)',
+      'having the power or skill to do something',
+      'She has a great ability to make people laugh.',
+    ],
+    [
+      'achieve',
+      'achievement (noun)',
+      'to succeed in doing something difficult',
+      'Winning the prize was a great achievement.',
+    ],
+    [
+      'argue',
+      'argument (noun); argumentative (adjective)',
+      'to disagree with someone using angry words',
+      'He is argumentative and hates to lose a debate.',
+    ],
+    [
+      'care',
+      'careful (adjective); careless (adjective); caring (adjective)',
+      'serious attention to avoid mistakes or harm',
+      'He is a very caring father.',
+    ],
+    [
+      'correspond',
+      'correspondence (noun)',
+      'to write letters or emails to someone',
+      'I keep up our correspondence by email.',
+    ],
+    [
+      'friend',
+      'friendship (noun); friendly (adjective); unfriendly (adjective)',
+      'a person you like and know well',
+      'Their friendship has lasted for twenty years.',
+    ],
+    [
+      'happy',
+      'unhappy (adjective); happiness (noun); happily (adverb)',
+      'feeling pleased and content',
+      'They lived happily ever after.',
+    ],
+    [
+      'jealous',
+      'jealousy (noun); jealously (adverb)',
+      'unhappy because someone has something you want',
+      'Her jealousy ruined their friendship.',
+    ],
+    [
+      'kind',
+      'unkind (adjective); kindness (noun); kindly (adverb)',
+      'friendly, generous and caring',
+      'Thank you for your kindness.',
+    ],
+    [
+      'marry',
+      'marriage (noun); married (adjective); unmarried (adjective)',
+      'to become husband and wife',
+      'Their marriage is very happy.',
+    ],
+    [
+      'nerve',
+      'nervous (adjective); nervously (adverb); nervousness (noun)',
+      'the feeling of worry before something important',
+      'He waited nervously outside the interview room.',
+    ],
+    [
+      'obey',
+      'obedient (adjective); disobey (verb); obedience (noun)',
+      'to do what you are told to do',
+      'Dogs are trained to be obedient.',
+    ],
+    [
+      'person',
+      'personal (adjective); impersonal (adjective); personality (noun)',
+      'a human being, or his or her character',
+      'She has a warm and friendly personality.',
+    ],
+    [
+      'polite',
+      'impolite (adjective); politely (adverb); politeness (noun)',
+      'having good manners towards other people',
+      'The waiter answered our questions politely.',
+    ],
+    [
+      'relate',
+      'relation (noun); relationship (noun); relative (noun)',
+      'to be connected with something or someone',
+      'Several of my relatives live abroad.',
+    ],
+    [
+      'willing',
+      'unwilling (adjective); willingly (adverb); willingness (noun)',
+      'ready to do something if asked',
+      'He willingly gave up his seat.',
+    ],
+  ],
+});

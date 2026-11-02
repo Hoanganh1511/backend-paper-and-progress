@@ -1,6 +1,7 @@
 // Seeds the Daily English Gate: the vocabulary units and the 30 daily lessons.
 //   node --experimental-strip-types prisma/seeds/vocabulary-seed.ts          # skips if units exist
 //   node --experimental-strip-types prisma/seeds/vocabulary-seed.ts --reset  # wipes the gate data, then seeds
+//   node --experimental-strip-types prisma/seeds/vocabulary-seed.ts --fill   # adds words to units that have none; changes nothing else
 // DAILY_GATE_START_DATE (YYYY-MM-DD, default 2026-11-01) is day 1.
 import { PrismaClient } from '@prisma/client';
 import { SECTIONS, UNITS } from './vocabulary-data.ts';
@@ -25,7 +26,49 @@ async function reset() {
   await prisma.vocabularyUnit.deleteMany();
 }
 
+/** Adds the words of every unit that exists but has none yet. Lessons, progress and units with words stay as they are. */
+async function fill() {
+  let added = 0;
+  for (const unit of UNITS) {
+    const row = await prisma.vocabularyUnit.findUnique({
+      where: { unitNumber: unit.unitNumber },
+    });
+    if (!row) {
+      console.log(`Unit ${unit.unitNumber} is not in the database; skipped.`);
+      continue;
+    }
+    if (
+      (await prisma.vocabularyWord.count({ where: { unitId: row.id } })) > 0
+    ) {
+      continue;
+    }
+    for (const section of SECTIONS) {
+      const entries = unit.sections[section];
+      if (entries.length === 0) continue;
+      await prisma.vocabularyWord.createMany({
+        data: entries.map((entry) => ({
+          unitId: row.id,
+          section,
+          word: entry.word,
+          meaning: entry.meaning,
+          example: entry.example,
+          contrast: entry.contrast ?? null,
+          forms: entry.forms ?? null,
+          pattern: entry.pattern ?? null,
+        })),
+      });
+      added += entries.length;
+    }
+    console.log(`Unit ${unit.unitNumber} (${unit.topic}): words added.`);
+  }
+  console.log(`Added ${added} words.`);
+}
+
 async function main() {
+  if (process.argv.includes('--fill')) {
+    await fill();
+    return;
+  }
   if (process.argv.includes('--reset')) {
     await reset();
     console.log('Daily Gate data cleared.');

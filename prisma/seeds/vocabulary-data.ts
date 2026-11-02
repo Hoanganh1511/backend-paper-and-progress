@@ -4,6 +4,17 @@
 // the quiz can blank it out (checked by vocabulary-data.spec.ts).
 // Run with node --experimental-strip-types, so keep to erasable TypeScript only.
 
+import { unit10 } from './units/unit10.ts';
+import { unit12 } from './units/unit12.ts';
+import { unit14 } from './units/unit14.ts';
+import { unit16 } from './units/unit16.ts';
+import { unit18 } from './units/unit18.ts';
+import { unit20 } from './units/unit20.ts';
+import { unit22 } from './units/unit22.ts';
+import { unit24 } from './units/unit24.ts';
+import { unit26 } from './units/unit26.ts';
+import { unit28 } from './units/unit28.ts';
+
 export type Section =
   | 'TOPIC_CONTRAST'
   | 'PHRASAL_VERB'
@@ -61,14 +72,6 @@ const formation = (
   meaning: string,
   example: string,
 ): Entry => ({ word, forms, meaning, example });
-
-const emptySections = (): Record<Section, Entry[]> => ({
-  TOPIC_CONTRAST: [],
-  PHRASAL_VERB: [],
-  PHRASE_COLLOCATION: [],
-  WORD_PATTERN: [],
-  WORD_FORMATION: [],
-});
 
 /* -------------------------------------------------------------------------- */
 /* Unit 2: Travel and transport                                               */
@@ -1655,41 +1658,21 @@ const unit8: UnitData = {
   },
 };
 
-/* -------------------------------------------------------------------------- */
-/* Units 10-28: topics only, words still to be added                          */
-/* -------------------------------------------------------------------------- */
-
-const placeholder = (unitNumber: number, topic: string): UnitData => ({
-  unitNumber,
-  topic,
-  sections: emptySections(),
-});
-
 export const UNITS: UnitData[] = [
   unit2,
   unit4,
   unit6,
   unit8,
-  // TODO: Extract from PDF pages 60-61
-  placeholder(10, 'People and society'),
-  // TODO: Extract from PDF pages 72-73
-  placeholder(12, 'Law and crime'),
-  // TODO: Extract from PDF pages 84-85
-  placeholder(14, 'Health and fitness'),
-  // TODO: Extract from PDF pages 96-97
-  placeholder(16, 'Food and drink'),
-  // TODO: Extract from PDF pages 108-109
-  placeholder(18, 'Education'),
-  // TODO: Extract from PDF pages 120-121
-  placeholder(20, 'Weather and environment'),
-  // TODO: Extract from PDF pages 132-133
-  placeholder(22, 'Money and shopping'),
-  // TODO: Extract from PDF pages 144-145
-  placeholder(24, 'Entertainment'),
-  // TODO: Extract from PDF pages 156-157
-  placeholder(26, 'Fashion and design'),
-  // TODO: Extract from PDF pages 168-169
-  placeholder(28, 'Work and business'),
+  unit10,
+  unit12,
+  unit14,
+  unit16,
+  unit18,
+  unit20,
+  unit22,
+  unit24,
+  unit26,
+  unit28,
 ];
 
 export const SECTIONS: Section[] = [
