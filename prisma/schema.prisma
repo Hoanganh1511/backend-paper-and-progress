@@ -29,6 +29,15 @@ model User {
   todos          Todo[]
   dailyProgress  UserDailyProgress[]
   wordReviews    WordReview[]
+  phrases        Phrase[]
+  phraseActivity PhraseActivityDay[]
+  articles       Article[]
+  comments       Comment[]
+  reactions      Reaction[]
+  bookmarks      Bookmark[]
+  topicFollows   TopicFollow[]
+  pathProgress   UserPathProgress[]
+  stepProgress   UserStepProgress[]
 }
 
 enum Role {
@@ -289,6 +298,7 @@ model VocabularyWord {
 
   unit    VocabularyUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
   reviews WordReview[]
+  phrases Phrase[]
 
   @@index([unitId, section])
 }
@@ -336,4 +346,460 @@ model WordReview {
   word VocabularyWord @relation(fields: [wordId], references: [id], onDelete: Cascade)
 
   @@index([userId, wordId])
+}
+
+/// Sổ cụm từ: người dùng tự lưu cụm từ rồi luyện 4 bước (đặt câu, nhớ lại, nói).
+enum PhraseStage {
+  WRITE // chưa đặt câu (bước 2)
+  RECALL // đến lượt nhớ lại (bước 3)
+  SPEAK // đến lượt luyện nói (bước 4)
+  MASTERED
+}
+
+enum PhraseExampleStep {
+  WRITE // bước 2
+  RECALL // bước 3
+}
+
+model Phrase {
+  id               String      @id @default(uuid())
+  userId           String
+  wordId           Int? // cụm lấy từ bài học; null nếu người dùng tự thêm
+  phrase           String // "meet a deadline"
+  phraseNormalized String // trim + lowercase + gộp khoảng trắng, để chống trùng
+  meaning          String // người dùng tự viết: nghĩa / gợi nhớ
+  sampleSentence   String?
+  stage            PhraseStage @default(WRITE)
+  intervalDays     Int         @default(0)
+  nextReviewAt     DateTime    @db.Date // service tự gán theo "hôm nay" của Daily Gate
+  easyStreak       Int         @default(0) // số lần "Dễ" liên tiếp
+  speakPassed      Boolean     @default(false)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word     VocabularyWord?       @relation(fields: [wordId], references: [id], onDelete: SetNull)
+  examples PhraseExample[]
+  attempts PhraseSpokenAttempt[]
+  reviews  PhraseReview[]
+
+  @@unique([userId, phraseNormalized])
+  @@index([userId, stage, nextReviewAt])
+}
+
+model PhraseExample {
+  id        Int               @id @default(autoincrement())
+  phraseId  String
+  text      String
+  step      PhraseExampleStep
+  isCorrect Boolean? // để dành cho chấm bằng AI
+  feedback  String? // để dành cho chấm bằng AI
+  usedHint  Boolean           @default(false)
+  createdAt DateTime          @default(now())
+
+  phrase Phrase @relation(fields: [phraseId], references: [id], onDelete: Cascade)
+
+  @@index([phraseId])
+}
+
+enum PhraseGrade {
+  FORGOT
+  HARD
+  EASY
+}
+
+/// Một dòng cho mỗi lần nhớ lại (bước 3) mà server đã chấp nhận; để lịch học tổng hợp theo ngày.
+model PhraseReview {
+  id        Int         @id @default(autoincrement())
+  phraseId  String
+  grade     PhraseGrade
+  usedHint  Boolean     @default(false)
+  createdAt DateTime    @default(now())
+
+  phrase Phrase @relation(fields: [phraseId], references: [id], onDelete: Cascade)
+
+  @@index([phraseId])
+  @@index([createdAt])
+}
+
+model PhraseSpokenAttempt {
+  id             Int      @id @default(autoincrement())
+  phraseId       String
+  transcript     String
+  containsPhrase Boolean
+  createdAt      DateTime @default(now())
+
+  phrase Phrase @relation(fields: [phraseId], references: [id], onDelete: Cascade)
+
+  @@index([phraseId])
+}
+
+/// Một dòng cho mỗi ngày người dùng có hành động trong sổ cụm từ; dùng tính streak.
+model PhraseActivityDay {
+  userId String
+  day    DateTime @db.Date
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, day])
+}
+
+// ---------------------------------------------------------------------------
+// Articles
+// ---------------------------------------------------------------------------
+
+enum ArticleStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ArticleVisibility {
+  PUBLIC
+  PREVIEW
+  MEMBERS_ONLY
+}
+
+enum ArticleType {
+  TUTORIAL
+  LEARNING_NOTES
+  EXPERIENCE
+  OPINION
+  CASE_STUDY
+  REVIEW
+}
+
+enum ReactionType {
+  LIKE
+  LOVE
+  INSIGHTFUL
+  CELEBRATE
+}
+
+model Article {
+  id             String            @id @default(uuid())
+  slug           String            @unique
+  title          String            @db.VarChar(200)
+  excerpt        String?           @db.VarChar(400)
+  coverImageUrl  String?
+  contentJson    Json // TipTap JSON, nguồn sự thật
+  contentHtml    String            @db.Text // đã sanitize, dùng để render
+  contentText    String            @db.Text // text thuần, để tính reading time và search
+  readingMinutes Int               @default(1)
+  articleType    ArticleType       @default(LEARNING_NOTES)
+  status         ArticleStatus     @default(DRAFT)
+  visibility     ArticleVisibility @default(PUBLIC)
+  publishedAt    DateTime?
+  scheduledAt    DateTime?
+  authorId       String
+  seriesId       String?
+  seriesOrder    Int?
+  viewCount      Int               @default(0)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  // searchVector (tsvector, generated) nằm trong migration SQL, Prisma không biết cột này.
+
+  author    User              @relation(fields: [authorId], references: [id])
+  series    Series?           @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  tags      ArticleTag[]
+  topics    ArticleTopic[]
+  comments  Comment[]
+  reactions Reaction[]
+  bookmarks Bookmark[]
+  revisions ArticleRevision[]
+  views     ArticleView[]
+
+  @@index([status, publishedAt])
+  @@index([authorId])
+  @@index([seriesId, seriesOrder])
+}
+
+model Tag {
+  id       String       @id @default(uuid())
+  name     String       @unique
+  slug     String       @unique
+  articles ArticleTag[]
+}
+
+model ArticleTag {
+  articleId String
+  tagId     String
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+  @@index([tagId])
+}
+
+model Series {
+  id          String    @id @default(uuid())
+  title       String
+  slug        String    @unique
+  description String?
+  articles    Article[]
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  articleId String
+  userId    String
+  parentId  String?
+  body      String   @db.Text
+  isDeleted Boolean  @default(false) // xoá mềm để không gãy cây trả lời
+  createdAt DateTime @default(now())
+
+  article Article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  Comment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("Replies")
+
+  @@index([articleId, createdAt])
+}
+
+model Reaction {
+  articleId String
+  userId    String
+  type      ReactionType
+  createdAt DateTime     @default(now())
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, userId, type])
+  @@index([userId])
+}
+
+model Bookmark {
+  articleId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, userId])
+  @@index([userId, createdAt])
+}
+
+model ArticleRevision {
+  id          String   @id @default(uuid())
+  articleId   String
+  title       String
+  contentJson Json
+  contentHtml String   @db.Text
+  contentText String   @db.Text // để so sánh khác biệt giữa các bản
+  createdById String
+  createdAt   DateTime @default(now())
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, createdAt])
+}
+
+model ArticleView {
+  id               String   @id @default(uuid())
+  articleId        String
+  userId           String?
+  maxScrollPercent Int      @default(0) // 0/25/50/75/100
+  createdAt        DateTime @default(now())
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Knowledge Library
+// ---------------------------------------------------------------------------
+
+/// Lĩnh vực (cha rỗng) và danh mục con của nó, ví dụ "Công nghệ thông tin" > "Frontend".
+model KnowledgeCategory {
+  id          String  @id @default(uuid())
+  slug        String  @unique
+  name        String
+  description String?
+  /// Khoá icon, client ánh xạ sang component.
+  icon        String  @default("book")
+  order       Int     @default(0)
+  parentId    String?
+
+  parent   KnowledgeCategory?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children KnowledgeCategory[] @relation("CategoryTree")
+  topics   Topic[]
+
+  @@index([parentId, order])
+}
+
+/// Một chủ đề kiến thức, ví dụ React. Article và Learning Path liên kết tới Topic, không nhân bản nội dung.
+model Topic {
+  id          String  @id @default(uuid())
+  slug        String  @unique
+  name        String
+  description String?
+  icon        String  @default("code")
+  /// Nhóm trong danh mục con, ví dụ "Framework", "Ngôn ngữ".
+  groupLabel  String?
+  order       Int     @default(0)
+  categoryId  String
+
+  category  KnowledgeCategory   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  resources KnowledgeResource[]
+  articles  ArticleTopic[]
+  paths     LearningPathTopic[]
+  followers TopicFollow[]
+
+  @@index([categoryId, order])
+}
+
+/// Tài liệu tham khảo của một Topic. `url` bắt đầu bằng "/" là nội bộ, còn lại là liên kết ngoài.
+model KnowledgeResource {
+  id          String  @id @default(uuid())
+  topicId     String
+  title       String
+  url         String
+  description String?
+  order       Int     @default(0)
+
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@index([topicId, order])
+}
+
+model TopicFollow {
+  userId    String
+  topicId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([userId, topicId])
+  @@index([userId, createdAt])
+}
+
+model ArticleTopic {
+  articleId String
+  topicId   String
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  topic   Topic   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, topicId])
+  @@index([topicId])
+}
+
+// ---------------------------------------------------------------------------
+// Learning Paths
+// ---------------------------------------------------------------------------
+
+enum LearningLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum PathStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model LearningPath {
+  id               String         @id @default(uuid())
+  slug             String         @unique
+  title            String
+  description      String         @db.Text
+  level            LearningLevel?
+  /// Chỉ điền khi có dữ liệu thật; không suy ra từ số bước.
+  estimatedMinutes Int?
+  objectives       String[]
+  prerequisites    String[]
+  outcomes         String[]
+  status           PathStatus     @default(PUBLISHED)
+  order            Int            @default(0)
+  createdAt        DateTime       @default(now())
+
+  topics   LearningPathTopic[]
+  phases   LearningPhase[]
+  steps    LearningStep[]
+  progress UserPathProgress[]
+
+  @@index([status, order])
+}
+
+model LearningPathTopic {
+  pathId  String
+  topicId String
+
+  path  LearningPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  topic Topic        @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([pathId, topicId])
+  @@index([topicId])
+}
+
+model LearningPhase {
+  id          String  @id @default(uuid())
+  pathId      String
+  order       Int
+  title       String
+  description String?
+
+  path  LearningPath   @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  steps LearningStep[]
+
+  @@unique([pathId, order])
+}
+
+model LearningStep {
+  id              String @id @default(uuid())
+  pathId          String
+  phaseId         String
+  /// Thứ tự trong cả lộ trình (1, 2, 3...), dùng cho "bước tiếp theo".
+  order           Int
+  slug            String
+  title           String
+  durationMinutes Int?
+  heading         String
+  lead            String @db.Text
+  /// Các khối nội dung (cùng dạng với Step Tutor: hộp, đoạn, danh sách, mã, checklist).
+  content         Json
+
+  path     LearningPath       @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  phase    LearningPhase      @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  progress UserStepProgress[]
+
+  @@unique([pathId, slug])
+  @@unique([pathId, order])
+}
+
+model UserPathProgress {
+  userId     String
+  pathId     String
+  startedAt  DateTime @default(now())
+  lastStepId String?
+  updatedAt  DateTime @updatedAt
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  path LearningPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
+
+  @@id([userId, pathId])
+}
+
+/// Tiến độ, checklist và ghi chú của một người ở một bước.
+model UserStepProgress {
+  userId      String
+  stepId      String
+  completedAt DateTime?
+  /// { [checkId]: boolean }
+  checks      Json      @default("{}")
+  note        String?   @db.Text
+  updatedAt   DateTime  @updatedAt
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  step LearningStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+
+  @@id([userId, stepId])
+  @@index([stepId])
 }

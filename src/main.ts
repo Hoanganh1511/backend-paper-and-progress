@@ -1,10 +1,14 @@
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import { UPLOAD_DIR } from './modules/articles/services/upload.service.js';
 import { AppModule } from './app.module.js';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // Images uploaded in development (no S3 bucket) are served from the uploads folder.
+  app.useStaticAssets(UPLOAD_DIR, { prefix: '/uploads' });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   const configService = app.get(ConfigService);
   app.enableCors({

@@ -1,4 +1,13 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
@@ -7,6 +16,7 @@ import {
   ListLoginHistoryDto,
   ListSecurityEventsDto,
   ListUsersDto,
+  SetUserRoleDto,
 } from './dtos/admin-query.dto.js';
 
 @Controller('api/v1/admin')
@@ -23,6 +33,15 @@ export class AdminController {
   @Get('users/:id')
   getUser(@Param('id') id: string) {
     return this.adminService.getUser(id);
+  }
+
+  @Patch('users/:id/role')
+  setRole(
+    @Req() req: { user: { sub: string } },
+    @Param('id') id: string,
+    @Body() body: SetUserRoleDto,
+  ) {
+    return this.adminService.setUserRole(req.user.sub, id, body.role);
   }
 
   @Get('login-history')

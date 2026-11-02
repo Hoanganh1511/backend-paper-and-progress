@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../shared/database/prisma.service.js';
 import type {
@@ -121,6 +125,31 @@ export class AdminService {
       totpEnabled: totp?.enabled ?? false,
       totpEnabledAt: totp?.enabledAt ?? null,
     };
+  }
+
+  /**
+   * Changes what a user may do. An admin cannot change their own role, so the
+   * last admin cannot lock everyone out. The role is in the access token, so it
+   * applies to the user from their next token refresh (within minutes).
+   */
+  async setUserRole(
+    actorId: string,
+    id: string,
+    role: 'USER' | 'CREATOR' | 'ADMIN',
+  ) {
+    if (actorId === id) {
+      throw new BadRequestException('Bạn không thể đổi role của chính mình.');
+    }
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!user) throw new NotFoundException('User không tồn tại');
+    return this.prisma.user.update({
+      where: { id },
+      data: { role },
+      select: { id: true, role: true },
+    });
   }
 
   async listLoginHistory(q: ListLoginHistoryDto) {

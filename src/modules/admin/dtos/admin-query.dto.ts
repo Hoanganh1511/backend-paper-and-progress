@@ -62,3 +62,9 @@ export class ListSecurityEventsDto extends DateRangeDto {
   @IsIn(SECURITY_EVENT_TYPES)
   type?: (typeof SECURITY_EVENT_TYPES)[number];
 }
+
+export class SetUserRoleDto {
+  /** USER reads, CREATOR also writes articles, ADMIN also runs the admin area. */
+  @IsIn(['USER', 'CREATOR', 'ADMIN'])
+  role: 'USER' | 'CREATOR' | 'ADMIN';
+}

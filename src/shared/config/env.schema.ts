@@ -44,6 +44,12 @@ export const envSchema = z.object({
     .union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal('')])
     .optional(),
 
+  // Articles: ảnh dev ghi ra đĩa; có AWS_S3_BUCKET thì dùng S3 (presigned POST).
+  AWS_S3_BUCKET: z.string().optional(),
+  CDN_BASE_URL: z.string().url().optional(),
+  // Backend gọi web app để dựng lại trang tĩnh khi bài đổi (gửi qua header, không qua URL)
+  REVALIDATE_SECRET: z.string().min(16).optional(),
+
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 
   THROTTLE_TTL: z.coerce.number().default(60),

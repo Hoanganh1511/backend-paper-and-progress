@@ -9,6 +9,10 @@ import { SecurityEventModule } from './modules/admin/security-event.module.js';
 import { ProjectDashboardModule } from './modules/project-dashboard/project-dashboard.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { TodosModule } from './modules/todos/todos.module.js';
+import { LearningActivityModule } from './modules/learning-activity/learning-activity.module.js';
+import { KnowledgeModule } from './modules/knowledge/knowledge.module.js';
+import { LearningPathsModule } from './modules/learning-paths/learning-paths.module.js';
+import { ArticlesModule } from './modules/articles/articles.module.js';
 import { DailyGateModule } from './modules/daily-gate/daily-gate.module.js';
 
 @Module({
@@ -24,6 +28,10 @@ import { DailyGateModule } from './modules/daily-gate/daily-gate.module.js';
     ProjectDashboardModule,
     TodosModule,
     DailyGateModule,
+    ArticlesModule,
+    LearningActivityModule,
+    KnowledgeModule,
+    LearningPathsModule,
   ],
 })
 export class AppModule {}

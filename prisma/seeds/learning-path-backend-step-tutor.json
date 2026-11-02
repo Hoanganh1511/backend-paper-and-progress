@@ -1,0 +1,1755 @@
+{
+ "slug": "backend-step-tutor",
+ "title": "Backend Step Tutor",
+ "description": "Phase 0.1 đến 0.3 của lộ trình backend: design system primitives, NestJS với Docker, Postgres và migrations. Làm từng bước, đánh dấu khi xong, ghi chú lại những gì bạn học được.",
+ "topics": [
+  "nestjs",
+  "docker",
+  "postgresql",
+  "redis"
+ ],
+ "phases": [
+  {
+   "order": 1,
+   "title": "Phase 0.1 · Design system primitives",
+   "steps": [
+    {
+     "slug": "ds1",
+     "title": "Text pattern + a11y harness",
+     "durationMinutes": 45,
+     "heading": "Read the Text pattern, set up a11y tests",
+     "lead": "Every primitive follows the same recipe. Write down what made Text work, then add accessibility testing before you build the rest.",
+     "content": [
+      {
+       "title": "Why",
+       "content": [
+        {
+         "type": "text",
+         "text": "Without primitives, each component invents its own spacing and borders. With them, one change to `Surface` updates every card, modal and section. This work happens in your **frontend repo**, not this backend one."
+        }
+       ]
+      },
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "Pattern audit",
+       "content": [
+        {
+         "type": "text",
+         "text": "Open your finished `Text` primitive and its tests. Before building anything, write five lines answering:"
+        },
+        {
+         "type": "list",
+         "ordered": true,
+         "items": [
+          "What is the file layout (component, test, index)?",
+          "How does `cva` define variants and default variants?",
+          "How is `ref` handled? In React 19 it is a normal prop, so no `forwardRef`.",
+          "How is `cn` imported (a relative path, not an alias)?",
+          "Which 13 behaviors do the tests cover?"
+         ]
+        },
+        {
+         "type": "text",
+         "text": "These answers are your template for the next nine primitives."
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "title": "Add jest-axe",
+       "content": [
+        {
+         "type": "code",
+         "code": "npm i -D jest-axe @types/jest-axe"
+        },
+        {
+         "type": "code",
+         "filename": "jest.setup.ts (add)",
+         "code": "import { toHaveNoViolations } from 'jest-axe';\nexpect.extend(toHaveNoViolations);"
+        },
+        {
+         "type": "text",
+         "text": "Make sure this file is listed under `setupFilesAfterEnv` in your Jest config. Then every primitive gets one test shaped like this:"
+        },
+        {
+         "type": "code",
+         "filename": "Stack.test.tsx (a11y test shape)",
+         "code": "import { render } from '@testing-library/react';\nimport { axe } from 'jest-axe';\nimport { Stack } from './Stack';\n\nit('has no accessibility violations', async () => {\n  const { container } = render(<Stack><p>content</p></Stack>);\n  expect(await axe(container)).toHaveNoViolations();\n});"
+        },
+        {
+         "type": "text",
+         "text": "Note what axe cannot do. It finds missing labels and bad roles, but it cannot judge color contrast in jsdom or keyboard order. Those you check by hand in the browser."
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "cds1a",
+         "text": "Your five-line pattern audit is written in your journal"
+        },
+        {
+         "type": "check",
+         "id": "cds1b",
+         "text": "An a11y test on Text passes with jest-axe"
+        }
+       ]
+      },
+      {
+       "title": "Journal",
+       "content": [
+        {
+         "type": "text",
+         "text": "Mark: ✅ cva, ✅ ref as prop, ⚠️/❌ a11y testing. Be honest about the last one; it is the newest for you."
+        }
+       ]
+      }
+     ],
+     "order": 1
+    },
+    {
+     "slug": "ds2",
+     "title": "Layout: Stack, Inline, Grid, Container, Spacer",
+     "durationMinutes": 120,
+     "heading": "Layout primitives",
+     "lead": "Stack, Inline, Grid, Container and Spacer replace repeated `flex flex-col gap-*` and ad hoc margins. Test first, then component.",
+     "content": [
+      {
+       "title": "Spec",
+       "content": [
+        {
+         "type": "table",
+         "head": [
+          "Primitive",
+          "Does",
+          "Props"
+         ],
+         "rows": [
+          [
+           "Stack",
+           "Vertical layout",
+           "`gap`"
+          ],
+          [
+           "Inline",
+           "Horizontal row that wraps",
+           "`gap`, `align`, `justify`, `wrap`"
+          ],
+          [
+           "Grid",
+           "Responsive columns, 1 to 4",
+           "`cols`, `gap`"
+          ],
+          [
+           "Container",
+           "Max width plus side padding",
+           "`size` (sm, md, lg, xl)"
+          ],
+          [
+           "Spacer",
+           "Intentional empty space",
+           "`size`, `axis`"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "title": "Pitfall to know before you start",
+       "content": [
+        {
+         "type": "text",
+         "text": "Tailwind scans your source for complete class names. A template like ```gap-${n}``` is never found, so the class is not generated and the gap silently does nothing. Map each value to a full literal string inside `cva`, as below. The same applies to `cols`."
+        }
+       ]
+      },
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "Stack, test first",
+       "content": [
+        {
+         "type": "text",
+         "text": "Write `Stack.test.tsx` first. Cases: renders children; applies `flex-col`; default gap; each gap variant adds the right class; merges a custom `className`; forwards `ref`; passes through `aria-label`; no axe violations. Then write the component. Compare with mine only after yours passes:"
+        },
+        {
+         "type": "details",
+         "summary": "My Stack",
+         "content": [
+          {
+           "type": "code",
+           "filename": "Stack.tsx",
+           "code": "import { cva, type VariantProps } from 'class-variance-authority';\nimport type { ComponentProps } from 'react';\nimport { cn } from '../../lib/cn';\n\nconst stack = cva('flex flex-col', {\n  variants: {\n    gap: {\n      0: 'gap-0', 1: 'gap-1', 2: 'gap-2', 3: 'gap-3',\n      4: 'gap-4', 6: 'gap-6', 8: 'gap-8',\n    },\n  },\n  defaultVariants: { gap: 4 },\n});\n\nexport type StackProps = ComponentProps<'div'> & VariantProps<typeof stack>;\n\nexport function Stack({ className, gap, ref, ...props }: StackProps) {\n  return <div ref={ref} className={cn(stack({ gap }), className)} {...props} />;\n}"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "title": "The other four",
+       "content": [
+        {
+         "type": "list",
+         "ordered": false,
+         "items": [
+          "**Inline**: same shape as Stack with `flex flex-row flex-wrap` and `align`/`justify` variants. Test that long content wraps (class present).",
+          "**Grid**: `cols` variants such as `1: 'grid-cols-1', 2: 'grid-cols-1 sm:grid-cols-2', 3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'`. This is your mobile-first rule: one column on phones.",
+          "**Container**: `mx-auto w-full px-4` plus a max-width per size. Test that it centers.",
+          "**Spacer**: an empty element, `aria-hidden=\"true\"`, fixed height or width by token. Test that it is hidden from assistive tech."
+         ]
+        },
+        {
+         "type": "text",
+         "text": "Add each to your index exports as you finish it."
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "cds2a",
+         "text": "Five components, each with its own test file, all passing"
+        },
+        {
+         "type": "check",
+         "id": "cds2b",
+         "text": "No template-string class names anywhere"
+        },
+        {
+         "type": "check",
+         "id": "cds2c",
+         "text": "One commit per primitive"
+        }
+       ]
+      }
+     ],
+     "order": 2
+    },
+    {
+     "slug": "ds3",
+     "title": "Surface, Separator, Icon, FocusRing",
+     "durationMinutes": 120,
+     "heading": "Surface, Separator, Icon, FocusRing",
+     "lead": "The four primitives with real accessibility decisions. Finish with a review pass and a commit.",
+     "content": [
+      {
+       "title": "Spec and the a11y decision for each",
+       "content": [
+        {
+         "type": "table",
+         "head": [
+          "Primitive",
+          "Spec",
+          "A11y decision"
+         ],
+         "rows": [
+          [
+           "Surface",
+           "Variants: **flat** (no border), **raised** (`border-2 border-black shadow-[4px_4px_0_#000]`), **sunken** (tinted background), **outline** (border only). Accepts `as` to render `section`, `article` and so on.",
+           "Do not hardcode `div` semantics. Let the caller pick the element."
+          ],
+          [
+           "Separator",
+           "Horizontal or vertical line. `decorative` prop.",
+           "Decorative: `role=\"none\"`. Meaningful: `role=\"separator\"` and `aria-orientation`."
+          ],
+          [
+           "Icon",
+           "SVG wrapper with `size` and color token.",
+           "No label: `aria-hidden=\"true\"`. With `label`: `role=\"img\"` and `aria-label`."
+          ],
+          [
+           "FocusRing",
+           "Applies a visible ring on `:focus-visible`.",
+           "Never remove outlines without a replacement. Use `focus-visible`, not `focus`, so mouse clicks do not show a ring."
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "Surface, test first",
+       "content": [
+        {
+         "type": "text",
+         "text": "Tests: renders each variant with its class; default is `flat`; custom `className` merges and wins on conflict (this is what `cn` with tailwind-merge is for); `as=\"section\"` renders a `section`; ref forwarding; axe passes. Use the same cva shape as Stack."
+        },
+        {
+         "type": "details",
+         "summary": "Hint: the variant map",
+         "content": [
+          {
+           "type": "text",
+           "text": "Put the shared base classes in the first argument of `cva` and only the differences per variant. Keep the shadow as one literal string so Tailwind can see it."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "title": "Review pass",
+       "content": [
+        {
+         "type": "text",
+         "text": "When all nine pass, paste each component and ask:"
+        },
+        {
+         "type": "code",
+         "code": "What edge cases do these tests not cover? Read each primitive and list only real gaps, with the input that would expose each one."
+        },
+        {
+         "type": "text",
+         "text": "Read every line of the answer. For each suggestion, write **take** or **skip** and one reason. Journal the places where you changed my template."
+        },
+        {
+         "type": "code",
+         "code": "npm test\ngit add -A\ngit commit -m \"feat(ui): add layout and surface primitives\""
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "cds3a",
+         "text": "All nine primitives exported, tested, axe-clean; `npm test` green"
+        },
+        {
+         "type": "check",
+         "id": "cds3b",
+         "text": "Keyboard tab through a page using FocusRing shows a visible ring"
+        },
+        {
+         "type": "check",
+         "id": "cds3c",
+         "text": "Review decisions (take or skip) recorded in your journal"
+        }
+       ]
+      }
+     ],
+     "order": 3
+    }
+   ]
+  },
+  {
+   "order": 2,
+   "title": "Phase 0.2 · NestJS + Docker",
+   "steps": [
+    {
+     "slug": "1",
+     "title": "Baseline and tooling",
+     "durationMinutes": 30,
+     "heading": "Baseline and tooling",
+     "lead": "Get a green, committed starting point so every later change is a small, readable diff.",
+     "content": [
+      {
+       "title": "Where you work",
+       "content": [
+        {
+         "type": "text",
+         "text": "Open a terminal in `C:\\Users\\PC\\Documents\\professional_projects\\backend-paper-and-progress`. This folder is already scaffolded by `nest new`, so do not run it again. Every path in the NestJS and database steps is relative to this folder."
+        }
+       ]
+      },
+      {
+       "title": "Why commit first",
+       "content": [
+        {
+         "type": "text",
+         "text": "The repo has no commits yet; every scaffold file shows as untracked. The first commit saves the untouched scaffold, so you can always compare against it or roll back. The alias change then becomes its own small commit."
+        }
+       ]
+      },
+      {
+       "title": "Why",
+       "content": [
+        {
+         "type": "text",
+         "text": "Right now nothing is committed. If a later step breaks something, you have nothing to compare against. Path aliases (`@/config/...`) also save you from `../../../` imports once you have four layers per module."
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "title": "Steps",
+       "content": [
+        {
+         "type": "text",
+         "text": "**1.1** Check `.gitignore` contains `.env`, `*.pem`, `coverage/`, `dist/`. Add any that are missing, then commit the scaffold."
+        },
+        {
+         "type": "code",
+         "code": "git add -A\ngit commit -m \"chore: nest scaffold\""
+        },
+        {
+         "type": "text",
+         "text": "**1.2** Check the Jest versions agree. If npm prints a peer warning, bump `ts-jest` to the line that supports Jest 30."
+        },
+        {
+         "type": "code",
+         "code": "npm ls jest ts-jest\nnpm test\nnpm run build\nnpm run lint"
+        },
+        {
+         "type": "text",
+         "text": "**1.3** Add the alias. In `tsconfig.json` under `compilerOptions`:"
+        },
+        {
+         "type": "code",
+         "code": "\"paths\": { \"@/*\": [\"./src/*\"] }"
+        },
+        {
+         "type": "text",
+         "text": "Do not add `baseUrl`. TypeScript 6 deprecates it, and `paths` works without it, resolved relative to `tsconfig.json`."
+        },
+        {
+         "type": "text",
+         "text": "In `package.json` under `jest` (rootDir is `src`, so the mapper points there):"
+        },
+        {
+         "type": "code",
+         "code": "\"moduleNameMapper\": { \"^@/(.*)$\": \"<rootDir>/$1\" }"
+        },
+        {
+         "type": "text",
+         "text": "**1.4** Pin Node. Create `.nvmrc` containing `22` and add `\"engines\": { \"node\": \">=22\" }` to `package.json`. Docker and CI will use the same major version."
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "c1a",
+         "text": "`npm test`, `npm run build`, `npm run lint` all pass"
+        },
+        {
+         "type": "check",
+         "id": "c1b",
+         "text": "A second commit contains the alias change on its own"
+        }
+       ]
+      }
+     ],
+     "order": 4
+    },
+    {
+     "slug": "2",
+     "title": "Docker Compose for infra",
+     "durationMinutes": 60,
+     "heading": "Docker Compose for dev infrastructure",
+     "lead": "One command starts Postgres and Redis the same way on every machine. You read every line before you run it.",
+     "content": [
+      {
+       "title": "Concepts to understand first",
+       "content": [
+        {
+         "type": "list",
+         "ordered": false,
+         "items": [
+          "**Port mapping** `\"127.0.0.1:5432:5432\"` is host:container. Binding to `127.0.0.1` keeps the database off your Wi-Fi network.",
+          "**Named volume** `pgdata` keeps data after `docker compose down`. Only `down -v` deletes it.",
+          "**Healthcheck + `depends_on: service_healthy`** makes the API wait until Postgres actually accepts connections, not merely until the container started.",
+          "**Profiles** let you keep pgAdmin and Redis Commander out of a normal `up`."
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "title": "Create `.env.example` and copy it to `.env`",
+       "content": [
+        {
+         "type": "code",
+         "filename": ".env.example",
+         "code": "NODE_ENV=development\nPORT=3000\nAPI_PREFIX=api\nCORS_ORIGINS=http://localhost:3001\n\nDB_HOST=localhost\nDB_PORT=5432\nDB_USER=pp_user\nDB_PASSWORD=change_me_dev_only\nDB_NAME=paper_progress\n\nREDIS_HOST=localhost\nREDIS_PORT=6379\nREDIS_PASSWORD=change_me_dev_only\n\nPGADMIN_EMAIL=dev@example.com\nPGADMIN_PASSWORD=change_me_dev_only"
+        },
+        {
+         "type": "heading",
+         "text": "Create `docker-compose.yml`"
+        },
+        {
+         "type": "code",
+         "filename": "docker-compose.yml",
+         "code": "services:\n  postgres:\n    image: postgres:16-alpine\n    restart: unless-stopped\n    environment:\n      POSTGRES_USER: ${DB_USER}\n      POSTGRES_PASSWORD: ${DB_PASSWORD}\n      POSTGRES_DB: ${DB_NAME}\n    ports:\n      - \"127.0.0.1:${DB_PORT}:5432\"\n    volumes:\n      - pgdata:/var/lib/postgresql/data\n    healthcheck:\n      test: [\"CMD-SHELL\", \"pg_isready -U ${DB_USER} -d ${DB_NAME}\"]\n      interval: 5s\n      timeout: 3s\n      retries: 10\n\n  redis:\n    image: redis:7-alpine\n    restart: unless-stopped\n    command: [\"redis-server\", \"--appendonly\", \"yes\", \"--requirepass\", \"${REDIS_PASSWORD}\"]\n    ports:\n      - \"127.0.0.1:${REDIS_PORT}:6379\"\n    volumes:\n      - redisdata:/data\n    healthcheck:\n      test: [\"CMD\", \"redis-cli\", \"-a\", \"${REDIS_PASSWORD}\", \"ping\"]\n      interval: 5s\n      timeout: 3s\n      retries: 10\n\n  pgadmin:\n    image: dpage/pgadmin4\n    profiles: [\"tools\"]\n    environment:\n      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}\n      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}\n    ports:\n      - \"127.0.0.1:5050:80\"\n    depends_on:\n      postgres:\n        condition: service_healthy\n\n  redis-commander:\n    image: rediscommander/redis-commander\n    profiles: [\"tools\"]\n    environment:\n      REDIS_HOSTS: \"local:redis:6379:0:${REDIS_PASSWORD}\"\n    ports:\n      - \"127.0.0.1:8081:8081\"\n    depends_on:\n      redis:\n        condition: service_healthy\n\nvolumes:\n  pgdata:\n  redisdata:"
+        },
+        {
+         "type": "text",
+         "text": "The API service is added in step 13, once it has a Dockerfile."
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "code",
+         "code": "cp .env.example .env\ndocker compose up -d postgres redis\ndocker compose ps\ndocker compose exec postgres psql -U pp_user -d paper_progress -c \"select 1\"\ndocker compose exec redis redis-cli -a change_me_dev_only ping"
+        },
+        {
+         "type": "check",
+         "id": "c2a",
+         "text": "Both services show `healthy`"
+        },
+        {
+         "type": "check",
+         "id": "c2b",
+         "text": "`select 1` works and Redis answers `PONG`"
+        },
+        {
+         "type": "check",
+         "id": "c2c",
+         "text": "`git status` shows `.env` is ignored"
+        }
+       ]
+      },
+      {
+       "title": "Journal",
+       "content": [
+        {
+         "type": "text",
+         "text": "For each service, write what the port, the volume and the healthcheck do, in your own words. What happens to your data on `docker compose down` versus `down -v`?"
+        }
+       ]
+      }
+     ],
+     "order": 5
+    },
+    {
+     "slug": "3",
+     "title": "Dockerfile, multi-stage",
+     "durationMinutes": 45,
+     "heading": "Dockerfile, multi-stage",
+     "lead": "Build in one image, ship from a clean small one.",
+     "content": [
+      {
+       "title": "Why",
+       "content": [
+        {
+         "type": "text",
+         "text": "Building needs TypeScript, the Nest CLI and every devDependency. Running needs only compiled JavaScript and production packages. Splitting stages keeps the shipped image small and removes tools an attacker could use. Copying `package*.json` before the source also lets Docker reuse the cached `npm ci` layer when only your code changed."
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "content": [
+        {
+         "type": "code",
+         "filename": "Dockerfile",
+         "code": "FROM node:22-alpine AS deps\nWORKDIR /app\nCOPY package.json package-lock.json ./\nRUN npm ci\n\nFROM node:22-alpine AS builder\nWORKDIR /app\nCOPY --from=deps /app/node_modules ./node_modules\nCOPY . .\nRUN npm run build\n\nFROM node:22-alpine AS prod-deps\nWORKDIR /app\nCOPY package.json package-lock.json ./\nRUN npm ci --omit=dev\n\nFROM node:22-alpine AS runner\nWORKDIR /app\nENV NODE_ENV=production\nRUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001 -G nodejs\nCOPY --from=prod-deps --chown=nestjs:nodejs /app/node_modules ./node_modules\nCOPY --from=builder --chown=nestjs:nodejs /app/dist ./dist\nCOPY --chown=nestjs:nodejs package.json ./\nUSER nestjs\nEXPOSE 3000\nHEALTHCHECK --interval=30s --timeout=3s --start-period=20s \\\n  CMD wget -qO- http://localhost:3000/api/v1/health || exit 1\nCMD [\"node\", \"dist/main.js\"]"
+        },
+        {
+         "type": "code",
+         "filename": ".dockerignore",
+         "code": "node_modules\ndist\ncoverage\n.git\n.env*\n!.env.example\ndocker-compose*.yml\nDockerfile"
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "code",
+         "code": "docker build -t pp-api .\ndocker images pp-api\ndocker run --rm pp-api whoami"
+        },
+        {
+         "type": "check",
+         "id": "c3a",
+         "text": "Build succeeds; size is roughly under 250 MB"
+        },
+        {
+         "type": "check",
+         "id": "c3b",
+         "text": "`whoami` prints `nestjs`, not `root`"
+        },
+        {
+         "type": "text",
+         "text": "The HEALTHCHECK will report unhealthy until step 10 adds the endpoint. That is expected."
+        }
+       ]
+      },
+      {
+       "title": "Journal",
+       "content": [
+        {
+         "type": "text",
+         "text": "List what is in the `builder` stage that is not in the final image. Why does running as non-root matter if the container is hacked?"
+        }
+       ]
+      }
+     ],
+     "order": 6
+    },
+    {
+     "slug": "4",
+     "title": "ConfigModule + Joi",
+     "durationMinutes": 45,
+     "heading": "ConfigModule with Joi validation",
+     "lead": "The app should refuse to start when configuration is wrong, and say exactly what is wrong.",
+     "content": [
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "First attempt",
+       "content": [
+        {
+         "type": "text",
+         "text": "Before reading my version, write `src/config/env.validation.ts` yourself: a Joi object covering every key in `.env.example`. Required keys have no default. `NODE_ENV` is one of development, test, production. Ports are numbers. `REDIS_PASSWORD` is optional in development only."
+        },
+        {
+         "type": "details",
+         "summary": "Compare with my version",
+         "content": [
+          {
+           "type": "code",
+           "filename": "src/config/env.validation.ts",
+           "code": "import * as Joi from 'joi';\n\nexport const envValidationSchema = Joi.object({\n  NODE_ENV: Joi.string().valid('development', 'test', 'production').required(),\n  PORT: Joi.number().port().default(3000),\n  API_PREFIX: Joi.string().default('api'),\n  CORS_ORIGINS: Joi.string().required(),\n\n  DB_HOST: Joi.string().required(),\n  DB_PORT: Joi.number().port().default(5432),\n  DB_USER: Joi.string().required(),\n  DB_PASSWORD: Joi.string().required(),\n  DB_NAME: Joi.string().required(),\n\n  REDIS_HOST: Joi.string().required(),\n  REDIS_PORT: Joi.number().port().default(6379),\n  REDIS_PASSWORD: Joi.string().when('NODE_ENV', {\n    is: 'production',\n    then: Joi.required(),\n    otherwise: Joi.optional().allow(''),\n  }),\n});"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "title": "Wire it up",
+       "content": [
+        {
+         "type": "code",
+         "filename": "src/app.module.ts",
+         "code": "import { ConfigModule } from '@nestjs/config';\nimport { envValidationSchema } from '@/config/env.validation';\n\nConfigModule.forRoot({\n  isGlobal: true,\n  cache: true,\n  validationSchema: envValidationSchema,\n  validationOptions: { abortEarly: false },\n}),"
+        },
+        {
+         "type": "text",
+         "text": "`abortEarly: false` reports every missing variable in one run instead of one at a time. `isGlobal` means you do not import the module everywhere."
+        },
+        {
+         "type": "text",
+         "text": "**Test it.** Write a small spec that calls `envValidationSchema.validate({...})` with `DB_HOST` missing and expects an error mentioning `DB_HOST`."
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "c4a",
+         "text": "Deleting `DB_HOST` from `.env` makes `npm run start:dev` fail with a readable message"
+        },
+        {
+         "type": "check",
+         "id": "c4b",
+         "text": "Your spec passes"
+        }
+       ]
+      },
+      {
+       "title": "Journal",
+       "content": [
+        {
+         "type": "text",
+         "text": "What is \"fail fast\" and why is a crash at boot better than an undefined value at the first request?"
+        }
+       ]
+      }
+     ],
+     "order": 7
+    },
+    {
+     "slug": "5",
+     "title": "Bootstrap hardening",
+     "durationMinutes": 45,
+     "heading": "Bootstrap hardening in `main.ts`",
+     "lead": "Prefix, versioning, security headers, validation, graceful shutdown. All in one function that tests reuse.",
+     "content": [
+      {
+       "title": "Why a shared `configureApp`",
+       "content": [
+        {
+         "type": "text",
+         "text": "If your e2e tests build the app without the same pipes and prefix as production, they test a different app. One function, called by both, removes that gap."
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "content": [
+        {
+         "type": "code",
+         "code": "npm i class-validator class-transformer"
+        },
+        {
+         "type": "code",
+         "filename": "src/configure-app.ts",
+         "code": "import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';\nimport { ConfigService } from '@nestjs/config';\nimport helmet from 'helmet';\n\nexport function configureApp(app: INestApplication): void {\n  const config = app.get(ConfigService);\n\n  app.setGlobalPrefix(config.get('API_PREFIX', 'api'));\n  app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });\n  app.use(helmet());\n  app.enableCors({\n    origin: config.getOrThrow('CORS_ORIGINS').split(','),\n    credentials: true,\n  });\n  app.useGlobalPipes(\n    new ValidationPipe({\n      whitelist: true,\n      forbidNonWhitelisted: true,\n      transform: true,\n    }),\n  );\n  app.enableShutdownHooks();\n}"
+        },
+        {
+         "type": "code",
+         "filename": "src/main.ts",
+         "code": "import { NestFactory } from '@nestjs/core';\nimport { ConfigService } from '@nestjs/config';\nimport { AppModule } from './app.module';\nimport { configureApp } from './configure-app';\n\nasync function bootstrap() {\n  const app = await NestFactory.create(AppModule);\n  configureApp(app);\n  await app.listen(app.get(ConfigService).getOrThrow('PORT'));\n}\nvoid bootstrap();"
+        },
+        {
+         "type": "text",
+         "text": "**Throttler.** In `AppModule` add `ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }])` and register `ThrottlerGuard` as a global `APP_GUARD` provider. Strict per-route limits (login 5/min) come in Phase 1."
+        }
+       ]
+      },
+      {
+       "title": "What each option does",
+       "content": [
+        {
+         "type": "list",
+         "ordered": false,
+         "items": [
+          "`whitelist` strips unknown fields from request bodies.",
+          "`forbidNonWhitelisted` returns 400 instead of silently stripping, so clients learn they sent junk.",
+          "`transform` turns plain JSON into DTO class instances and converts types.",
+          "`enableShutdownHooks` lets Nest close DB and Redis connections on SIGTERM, which is what Kubernetes sends before killing a pod."
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "c5a",
+         "text": "App boots; `curl -i localhost:3000/api/v1/` shows helmet headers like `x-content-type-options`"
+        },
+        {
+         "type": "check",
+         "id": "c5b",
+         "text": "Ctrl+C logs a clean shutdown"
+        }
+       ]
+      },
+      {
+       "title": "Journal",
+       "content": [
+        {
+         "type": "text",
+         "text": "Explain the NestJS request lifecycle order: middleware, guards, interceptors, pipes, handler, interceptors, filters. Where does `ValidationPipe` sit?"
+        }
+       ]
+      }
+     ],
+     "order": 8
+    },
+    {
+     "slug": "6",
+     "title": "Database + Redis modules",
+     "durationMinutes": 60,
+     "heading": "Database and Redis modules",
+     "lead": "Connect Nest to Postgres and Redis, and give the TypeORM CLI its own connection for migrations.",
+     "content": [
+      {
+       "title": "Two connections, on purpose",
+       "content": [
+        {
+         "type": "text",
+         "text": "The running app gets its connection from Nest's DI. The migration CLI runs outside Nest, so it needs a plain `DataSource` file. Both read the same environment variables."
+        },
+        {
+         "type": "text",
+         "text": "**Rule:** `synchronize` is always `false`. With it on, TypeORM diffs your entities against the database at boot and alters tables, including dropping columns. That is how production data gets lost."
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "content": [
+        {
+         "type": "code",
+         "code": "npm i dotenv argon2"
+        },
+        {
+         "type": "text",
+         "text": "`argon2` is installed now for the seed script in step 18."
+        },
+        {
+         "type": "code",
+         "filename": "src/database/database.module.ts",
+         "code": "import { Module } from '@nestjs/common';\nimport { ConfigService } from '@nestjs/config';\nimport { TypeOrmModule } from '@nestjs/typeorm';\n\n@Module({\n  imports: [\n    TypeOrmModule.forRootAsync({\n      inject: [ConfigService],\n      useFactory: (c: ConfigService) => ({\n        type: 'postgres',\n        host: c.getOrThrow('DB_HOST'),\n        port: c.getOrThrow('DB_PORT'),\n        username: c.getOrThrow('DB_USER'),\n        password: c.getOrThrow('DB_PASSWORD'),\n        database: c.getOrThrow('DB_NAME'),\n        autoLoadEntities: true,\n        synchronize: false,\n        migrationsRun: false,\n      }),\n    }),\n  ],\n})\nexport class DatabaseModule {}"
+        },
+        {
+         "type": "code",
+         "filename": "src/database/data-source.ts",
+         "code": "import 'dotenv/config';\nimport { DataSource } from 'typeorm';\n\nexport default new DataSource({\n  type: 'postgres',\n  host: process.env.DB_HOST,\n  port: Number(process.env.DB_PORT),\n  username: process.env.DB_USER,\n  password: process.env.DB_PASSWORD,\n  database: process.env.DB_NAME,\n  migrations: ['src/database/migrations/*.ts'],\n});"
+        },
+        {
+         "type": "code",
+         "filename": "package.json scripts",
+         "code": "\"typeorm\": \"typeorm-ts-node-commonjs\",\n\"migration:create\": \"typeorm-ts-node-commonjs migration:create\",\n\"migration:run\": \"typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts\",\n\"migration:revert\": \"typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts\",\n\"migration:show\": \"typeorm-ts-node-commonjs migration:show -d src/database/data-source.ts\""
+        },
+        {
+         "type": "text",
+         "text": "Your installed TypeORM is a new major version. Run `npx typeorm --help` to confirm the CLI name and flags before relying on these."
+        },
+        {
+         "type": "code",
+         "filename": "src/redis/redis.module.ts",
+         "code": "import { Global, Inject, Module, OnModuleDestroy } from '@nestjs/common';\nimport { ConfigService } from '@nestjs/config';\nimport Redis from 'ioredis';\n\nexport const REDIS_CLIENT = Symbol('REDIS_CLIENT');\n\n@Global()\n@Module({\n  providers: [\n    {\n      provide: REDIS_CLIENT,\n      inject: [ConfigService],\n      useFactory: (c: ConfigService) =>\n        new Redis({\n          host: c.getOrThrow('REDIS_HOST'),\n          port: c.getOrThrow('REDIS_PORT'),\n          password: c.get('REDIS_PASSWORD') || undefined,\n        }),\n    },\n  ],\n  exports: [REDIS_CLIENT],\n})\nexport class RedisModule implements OnModuleDestroy {\n  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}\n  async onModuleDestroy() {\n    await this.redis.quit();\n  }\n}"
+        },
+        {
+         "type": "text",
+         "text": "Add `DatabaseModule` and `RedisModule` to `AppModule`. For BullMQ add `BullModule.forRootAsync` with the same host, port and password inside a `connection` object. BullMQ workers need `maxRetriesPerRequest: null` on their connection."
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "c6a",
+         "text": "App boots with Docker Postgres and Redis running, no connection errors"
+        },
+        {
+         "type": "check",
+         "id": "c6b",
+         "text": "`npm run migration:show` connects (it will list nothing yet)"
+        }
+       ]
+      },
+      {
+       "title": "Journal",
+       "content": [
+        {
+         "type": "text",
+         "text": "What is a provider token? Why is `REDIS_CLIENT` a Symbol and what does `@Inject` do with it?"
+        }
+       ]
+      }
+     ],
+     "order": 9
+    },
+    {
+     "slug": "7",
+     "title": "Health module (you write)",
+     "durationMinutes": 45,
+     "heading": "Health module",
+     "lead": "You write the first version by hand. Then we upgrade it with real dependency checks.",
+     "content": [
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "Version 1",
+       "content": [
+        {
+         "type": "list",
+         "ordered": true,
+         "items": [
+          "Write the unit test first: the controller's method returns an object with `status: 'ok'`, an ISO `timestamp`, and a numeric `uptime`.",
+          "Create `src/health/health.controller.ts` and `health.module.ts`. Route: `GET /api/v1/health`.",
+          "Use `process.uptime()` for uptime. Import the module in `AppModule`."
+         ]
+        },
+        {
+         "type": "details",
+         "summary": "Stuck? Hints, not the answer",
+         "content": [
+          {
+           "type": "list",
+           "ordered": false,
+           "items": [
+            "`@Controller({ path: 'health', version: '1' })` gives you the URL.",
+            "A controller must be listed in a module's `controllers` array, or Nest never sees it.",
+            "Test with `Test.createTestingModule({ controllers: [HealthController] }).compile()`."
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "title": "Version 2: split liveness and readiness",
+       "content": [
+        {
+         "type": "code",
+         "code": "npm i @nestjs/terminus"
+        },
+        {
+         "type": "table",
+         "head": [
+          "Endpoint",
+          "Checks",
+          "If it fails, Kubernetes"
+         ],
+         "rows": [
+          [
+           "`/health` (liveness)",
+           "Process is alive. No dependencies.",
+           "Restarts the pod"
+          ],
+          [
+           "`/health/ready` (readiness)",
+           "Database and Redis respond",
+           "Stops sending traffic, does not restart"
+          ]
+         ]
+        },
+        {
+         "type": "text",
+         "text": "If liveness checked the database, one database outage would restart every pod in a loop and make recovery slower. This is the answer to your journal question."
+        },
+        {
+         "type": "code",
+         "filename": "readiness sketch",
+         "code": "@Get('ready')\n@HealthCheck()\nready() {\n  return this.health.check([\n    () => this.db.pingCheck('database'),\n    async () => {\n      await this.redis.ping();\n      return { redis: { status: 'up' } };\n    },\n  ]);\n}"
+        },
+        {
+         "type": "text",
+         "text": "Inject `HealthCheckService`, `TypeOrmHealthIndicator` and `@Inject(REDIS_CLIENT)`. Import `TerminusModule`. Put `@SkipThrottle()` on the controller so probes never get rate limited."
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "c7a",
+         "text": "Test passes and `/api/v1/health` returns the JSON shape"
+        },
+        {
+         "type": "check",
+         "id": "c7b",
+         "text": "`docker compose stop redis` makes `/health/ready` return 503 while `/health` stays 200"
+        }
+       ]
+      },
+      {
+       "title": "Journal",
+       "content": [
+        {
+         "type": "text",
+         "text": "Module, Controller, Provider: one sentence each from memory. Then compare with Express, where you wire all of this by hand."
+        }
+       ]
+      }
+     ],
+     "order": 10
+    },
+    {
+     "slug": "8",
+     "title": "Swagger docs",
+     "durationMinutes": 30,
+     "heading": "Swagger docs",
+     "lead": "Every endpoint documents itself, and the frontend can read the contract at `/api/docs`.",
+     "content": [
+      {
+       "tag": "do",
+       "content": [
+        {
+         "type": "code",
+         "filename": "src/configure-swagger.ts",
+         "code": "import { INestApplication } from '@nestjs/common';\nimport { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';\n\nexport function configureSwagger(app: INestApplication): void {\n  const doc = new DocumentBuilder()\n    .setTitle('Paper & Progress API')\n    .setVersion('1.0')\n    .addBearerAuth()\n    .build();\n  SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, doc));\n}"
+        },
+        {
+         "type": "text",
+         "text": "In `main.ts`, call it only outside production:"
+        },
+        {
+         "type": "code",
+         "code": "if (process.env.NODE_ENV !== 'production') configureSwagger(app);"
+        },
+        {
+         "type": "text",
+         "text": "Add the CLI plugin so DTO properties are documented automatically. In `nest-cli.json`, inside `compilerOptions`:"
+        },
+        {
+         "type": "code",
+         "code": "\"plugins\": [\"@nestjs/swagger\"]"
+        },
+        {
+         "type": "text",
+         "text": "Add `@ApiTags('health')` and `@ApiOperation({ summary: 'Liveness probe' })` to your health controller."
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "c8a",
+         "text": "`/api/docs` lists both health endpoints and \"Try it out\" works"
+        },
+        {
+         "type": "check",
+         "id": "c8b",
+         "text": "You can say why docs are off in production"
+        }
+       ]
+      }
+     ],
+     "order": 11
+    },
+    {
+     "slug": "9",
+     "title": "Filters and interceptors",
+     "durationMinutes": 60,
+     "heading": "Cross-cutting foundations",
+     "lead": "One response shape for success, one for errors, and a request id on every call. Small now, large payoff later.",
+     "content": [
+      {
+       "title": "Target shapes",
+       "content": [
+        {
+         "type": "code",
+         "code": "success: { \"data\": ... }\nerror:   { \"error\": { \"code\": \"EMAIL_TAKEN\", \"message\": \"...\", \"details\": ... } }"
+        },
+        {
+         "type": "text",
+         "text": "Domain code will throw its own errors (for example `EmailAlreadyExistsError`) and never import `HttpException`. The filter is the only place that maps domain errors to HTTP status codes. That keeps the domain framework-free."
+        }
+       ]
+      },
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "Interceptor",
+       "content": [
+        {
+         "type": "text",
+         "text": "Write `common/interceptors/response.interceptor.ts` yourself. It implements `NestInterceptor` and wraps the handler result with `map((data) => ({ data }))`. Skip wrapping for health, since probes want the plain object. Hint: a custom decorator that sets metadata, read with `Reflector`."
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "title": "Exception filter",
+       "content": [
+        {
+         "type": "code",
+         "filename": "src/common/filters/all-exceptions.filter.ts",
+         "code": "import {\n  ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger,\n} from '@nestjs/common';\nimport { Response } from 'express';\n\n@Catch()\nexport class AllExceptionsFilter implements ExceptionFilter {\n  private readonly logger = new Logger(AllExceptionsFilter.name);\n\n  catch(exception: unknown, host: ArgumentsHost) {\n    const res = host.switchToHttp().getResponse<Response>();\n\n    if (exception instanceof HttpException) {\n      const status = exception.getStatus();\n      const body = exception.getResponse();\n      const message =\n        typeof body === 'string' ? body : (body as any).message ?? exception.message;\n      return res.status(status).json({\n        error: { code: HttpStatus[status], message },\n      });\n    }\n\n    this.logger.error(exception);\n    res.status(500).json({\n      error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' },\n    });\n  }\n}"
+        },
+        {
+         "type": "text",
+         "text": "Register it with `app.useGlobalFilters(new AllExceptionsFilter())` in `configureApp`. The 500 branch never returns the stack trace or the original message, which could leak SQL or file paths."
+        },
+        {
+         "type": "text",
+         "text": "**Request id.** A tiny middleware: read `x-request-id` or generate one with `crypto.randomUUID()`, set it on the response header and on `req`. In Phase 6 your logger will print it on every line."
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "c9a",
+         "text": "A 404 route returns the error envelope"
+        },
+        {
+         "type": "check",
+         "id": "c9b",
+         "text": "A thrown plain `Error` returns 500 with no stack trace"
+        },
+        {
+         "type": "check",
+         "id": "c9c",
+         "text": "Every response carries an `x-request-id` header"
+        }
+       ]
+      },
+      {
+       "title": "Journal",
+       "content": [
+        {
+         "type": "text",
+         "text": "Guard vs middleware vs interceptor vs filter. Which one can see the handler's return value? Which one can stop a request before the handler?"
+        }
+       ]
+      }
+     ],
+     "order": 12
+    },
+    {
+     "slug": "10",
+     "title": "Full stack in Docker + e2e",
+     "durationMinutes": 30,
+     "heading": "Run the whole stack and verify",
+     "lead": "Add the API to Compose, prove it works from a cold start, and lock it in with an e2e test.",
+     "content": [
+      {
+       "tag": "do",
+       "content": [
+        {
+         "type": "text",
+         "text": "Add this service to `docker-compose.yml`. Inside containers the host names are service names, so override them:"
+        },
+        {
+         "type": "code",
+         "code": "  api:\n    build: .\n    env_file: .env\n    environment:\n      DB_HOST: postgres\n      DB_PORT: 5432\n      REDIS_HOST: redis\n      REDIS_PORT: 6379\n    ports:\n      - \"127.0.0.1:${PORT}:3000\"\n    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_healthy"
+        },
+        {
+         "type": "text",
+         "text": "Note the container's DB port is always 5432, even if you changed the host port. Put `NODE_ENV=production` in your shell only if you want to test the production image; Swagger is off then."
+        },
+        {
+         "type": "text",
+         "text": "**e2e test** in `test/health.e2e-spec.ts`: build the app from `AppModule`, call `configureApp(app)`, then `request(app.getHttpServer()).get('/api/v1/health').expect(200)`. This needs Postgres and Redis running."
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "code",
+         "code": "docker compose down\ndocker compose up -d --build\ncurl localhost:3000/api/v1/health\ncurl localhost:3000/api/v1/health/ready\nnpm run test:e2e"
+        },
+        {
+         "type": "check",
+         "id": "c10a",
+         "text": "Both curls answer and the container shows `healthy`"
+        },
+        {
+         "type": "check",
+         "id": "c10b",
+         "text": "e2e passes"
+        },
+        {
+         "type": "check",
+         "id": "c10c",
+         "text": "README has a \"Getting started\" section, and you committed"
+        }
+       ]
+      },
+      {
+       "title": "Phase 0.2 journal checklist",
+       "content": [
+        {
+         "type": "text",
+         "text": "Rate each: Provider/Controller/Module, DI container, multi-stage build, liveness vs readiness. Use the ratings below."
+        }
+       ]
+      }
+     ],
+     "order": 13
+    }
+   ]
+  },
+  {
+   "order": 3,
+   "title": "Phase 0.3 · Schema + migrations",
+   "steps": [
+    {
+     "slug": "11",
+     "title": "Schema rules + CLI",
+     "durationMinutes": 45,
+     "heading": "Schema ground rules",
+     "lead": "Decide conventions once, so the nine migrations look like one person wrote them.",
+     "content": [
+      {
+       "title": "Conventions",
+       "content": [
+        {
+         "type": "table",
+         "head": [
+          "Topic",
+          "Rule",
+          "Reason"
+         ],
+         "rows": [
+          [
+           "Names",
+           "snake_case, plural tables",
+           "Postgres folds unquoted names to lowercase"
+          ],
+          [
+           "Primary key",
+           "`uuid DEFAULT gen_random_uuid()`",
+           "Not guessable, safe to merge databases. Built in since PG13"
+          ],
+          [
+           "Time",
+           "`timestamptz` always",
+           "Plain `timestamp` drops the zone silently"
+          ],
+          [
+           "Delete rules",
+           "Cascade for user-owned data; RESTRICT for content references",
+           "Deleting a user removes their progress; deleting a category must not orphan courses"
+          ],
+          [
+           "Enums",
+           "Native enums for stable sets (role, status)",
+           "Adding a value later is `ALTER TYPE ... ADD VALUE`; removing one is painful"
+          ],
+          [
+           "Migrations",
+           "Hand-written SQL, working `down()`",
+           "You see exactly what runs"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "content": [
+        {
+         "type": "text",
+         "text": "Create the first empty migration with the CLI and read what it generates:"
+        },
+        {
+         "type": "code",
+         "code": "npm run migration:create -- src/database/migrations/001-users"
+        },
+        {
+         "type": "text",
+         "text": "It produces a class with `up(queryRunner)` and `down(queryRunner)`. TypeORM records each applied migration in a `migrations` table, which is how it knows what to skip."
+        },
+        {
+         "type": "text",
+         "text": "**Decisions to make before step 16.** Reply to your assistant with a choice for each, or accept my recommendations:"
+        },
+        {
+         "type": "list",
+         "ordered": false,
+         "items": [
+          "`domain` on `courses`: denormalize it (recommended) or join through categories.",
+          "Add a `sections` table in migration 004 (recommended, Phase 2 needs it).",
+          "Add `010_auth_tokens` for password-reset and email-verification token hashes (recommended)."
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "c11a",
+         "text": "An empty migration file exists and `migration:show` lists it as pending"
+        },
+        {
+         "type": "check",
+         "id": "c11b",
+         "text": "You made the three decisions above"
+        }
+       ]
+      }
+     ],
+     "order": 14
+    },
+    {
+     "slug": "12",
+     "title": "001 users (you write)",
+     "durationMinutes": 60,
+     "heading": "Migration 001: users",
+     "lead": "You write this one in raw SQL. I only review.",
+     "content": [
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "Spec",
+       "content": [
+        {
+         "type": "table",
+         "head": [
+          "Column",
+          "Type",
+          "Notes"
+         ],
+         "rows": [
+          [
+           "id",
+           "uuid",
+           "PK, default `gen_random_uuid()`"
+          ],
+          [
+           "email",
+           "varchar(320)",
+           "NOT NULL"
+          ],
+          [
+           "password_hash",
+           "text",
+           "NOT NULL"
+          ],
+          [
+           "role",
+           "enum `user_role`",
+           "student | admin, default student"
+          ],
+          [
+           "email_verified",
+           "boolean",
+           "NOT NULL, default false"
+          ],
+          [
+           "mfa_secret",
+           "text",
+           "nullable"
+          ],
+          [
+           "created_at, updated_at",
+           "timestamptz",
+           "NOT NULL, default `now()`"
+          ]
+         ]
+        },
+        {
+         "type": "text",
+         "text": "Plus: a **unique index on `lower(email)`**. Then write `down()` so it drops the table and the enum type, in the right order."
+        },
+        {
+         "type": "text",
+         "text": "Use ``queryRunner.query(`...`)`` with one statement per call."
+        },
+        {
+         "type": "details",
+         "summary": "Hint 1: the index",
+         "content": [
+          {
+           "type": "text",
+           "text": "`CREATE UNIQUE INDEX ... ON users (lower(email))` is an expression index. Ask yourself: why not just `UNIQUE(email)`? Try inserting `A@x.com` and `a@x.com` with each approach."
+          }
+         ]
+        },
+        {
+         "type": "details",
+         "summary": "Hint 2: order in down()",
+         "content": [
+          {
+           "type": "text",
+           "text": "The table uses the enum type, so the table must go first. Dropping the type first fails."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "title": "When you finish, check these",
+       "content": [
+        {
+         "type": "list",
+         "ordered": false,
+         "items": [
+          "Is email length 320 or 255? (RFC allows 254; 320 is the old limit.) Pick and justify.",
+          "Who updates `updated_at`: a trigger or the application? Both are valid; know which you chose.",
+          "Do you also store emails already lower-cased in the application? (The Email value object in Phase 1 does.) Why keep both protections?"
+         ]
+        },
+        {
+         "type": "text",
+         "text": "Then ask for a review. A good review request names what you decided and what you are unsure about."
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "code",
+         "code": "npm run migration:run\ndocker compose exec postgres psql -U pp_user -d paper_progress -c \"\\d users\"\nnpm run migration:revert\nnpm run migration:run"
+        },
+        {
+         "type": "check",
+         "id": "c12a",
+         "text": "Up, down, up all succeed"
+        },
+        {
+         "type": "check",
+         "id": "c12b",
+         "text": "Inserting `A@x.com` then `a@x.com` fails with a unique violation"
+        }
+       ]
+      },
+      {
+       "title": "Journal",
+       "content": [
+        {
+         "type": "text",
+         "text": "UUID vs auto-increment: write two advantages and two costs of UUID."
+        }
+       ]
+      }
+     ],
+     "order": 15
+    },
+    {
+     "slug": "13",
+     "title": "002 to 005 content + progress",
+     "durationMinutes": 120,
+     "heading": "Migrations 002 to 005",
+     "lead": "Categories, courses, lessons and learner progress. Spec below, you write the SQL, then request a review.",
+     "content": [
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "002 categories",
+       "content": [
+        {
+         "type": "text",
+         "text": "`id`, `parent_id` (self FK, nullable, **RESTRICT**), `domain` enum (it, english, life_skills), `name`, `slug` unique, `sort_order` int default 0. Add `CHECK (id <> parent_id)` and an index on `parent_id`."
+        },
+        {
+         "type": "text",
+         "text": "Why a tree: unlimited depth, Frontend > React > Hooks. An adjacency list (just `parent_id`) is fine at your scale."
+        }
+       ]
+      },
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "003 courses",
+       "content": [
+        {
+         "type": "text",
+         "text": "`category_id` FK RESTRICT, `domain` (denormalized, same enum), `status` enum (draft, published, archived), `price_type` enum (free, pro), `slug` unique, `title`, `description`, `thumbnail_url`, `published_at`, timestamps."
+        },
+        {
+         "type": "text",
+         "text": "Index for the main listing query. Compare these two and pick, then prove it with `EXPLAIN` in step 19:"
+        },
+        {
+         "type": "code",
+         "code": "-- plain compound\nCREATE INDEX courses_status_domain_idx ON courses (status, domain);\n-- partial: only indexes the rows the public site ever reads\nCREATE INDEX courses_published_domain_idx ON courses (domain, published_at DESC)\n  WHERE status = 'published';"
+        }
+       ]
+      },
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "004 sections, lessons, media_assets",
+       "content": [
+        {
+         "type": "text",
+         "text": "`sections`: course_id (CASCADE), title, sort_order. `lessons`: section_id (CASCADE), course_id, title, slug, `content_type` enum (text, video, quiz), `content` text, `duration_seconds`, `is_free` boolean, sort_order. `media_assets`: storage_key unique, mime_type, size_bytes bigint, duration_seconds."
+        },
+        {
+         "type": "text",
+         "text": "Ordering needs a unique constraint that survives reordering inside one transaction. This is the trick:"
+        },
+        {
+         "type": "code",
+         "code": "ALTER TABLE lessons\n  ADD CONSTRAINT lessons_order_uq UNIQUE (section_id, sort_order)\n  DEFERRABLE INITIALLY DEFERRED;"
+        },
+        {
+         "type": "text",
+         "text": "Deferred means Postgres checks the constraint at commit, so swapping two lessons' positions does not fail halfway through."
+        }
+       ]
+      },
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "005 user_progress, bookmarks, learning_streaks",
+       "content": [
+        {
+         "type": "text",
+         "text": "`user_progress`: user_id (CASCADE), lesson_id (CASCADE), status enum (not_started, in_progress, completed), completed_at, time_spent_seconds, **UNIQUE (user_id, lesson_id)**. `bookmarks`: user_id, lesson_id, note, created_at, unique pair. `learning_streaks`: `user_id` as the primary key, current_streak, longest_streak, last_activity_date (a `date`, not timestamp)."
+        }
+       ]
+      },
+      {
+       "title": "Review checklist for yourself",
+       "content": [
+        {
+         "type": "list",
+         "ordered": false,
+         "items": [
+          "Every FK has an explicit ON DELETE.",
+          "Every FK column you filter or join by has an index (Postgres does not create these automatically).",
+          "Every `down()` drops tables before the enum types they use."
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "c13a",
+         "text": "002 through 005 run up and revert down cleanly, one at a time"
+        },
+        {
+         "type": "check",
+         "id": "c13b",
+         "text": "You requested and read a review of all four"
+        }
+       ]
+      },
+      {
+       "title": "Journal",
+       "content": [
+        {
+         "type": "text",
+         "text": "For each index, write the query it serves. Why does column order in a compound index matter? What is a partial index?"
+        }
+       ]
+      }
+     ],
+     "order": 16
+    },
+    {
+     "slug": "14",
+     "title": "006 to 010 sessions, audit, billing",
+     "durationMinutes": 120,
+     "heading": "Migrations 006 to 010",
+     "lead": "Sessions, notifications, audit log, subscriptions, devlog, and auth tokens.",
+     "content": [
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "006 user_sessions",
+       "content": [
+        {
+         "type": "text",
+         "text": "`user_id` (CASCADE), `refresh_token_hash` (store a hash, never the token), `device_fingerprint`, `ip_address` (`inet` type), `user_agent`, `country` char(2), `is_revoked` boolean, `expires_at`, created_at. Index `(user_id, is_revoked)`."
+        },
+        {
+         "type": "text",
+         "text": "Design note: live sessions will sit in Redis for fast checks. This table is the durable record and powers the \"active devices\" page. Decide in writing which one wins if they disagree."
+        }
+       ]
+      },
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "007 notifications, activity_log",
+       "content": [
+        {
+         "type": "text",
+         "text": "`notifications`: user_id, type enum, title, message, is_read, data jsonb, created_at. Index `(user_id, is_read, created_at DESC)`. `activity_log`: user_id (SET NULL on delete, so the audit trail survives), action, entity_type, entity_id, metadata jsonb, ip_address inet, created_at. Treat it as append-only: no updates."
+        },
+        {
+         "type": "text",
+         "text": "Action as a native enum will grow constantly. Consider `text` with a `CHECK` instead, and write down which you picked."
+        }
+       ]
+      },
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "008 subscriptions",
+       "content": [
+        {
+         "type": "text",
+         "text": "user_id, `stripe_customer_id`, `stripe_subscription_id` unique, plan enum (monthly, yearly), status enum (active, past_due, canceled), current_period_start/end. Index on stripe_customer_id."
+        }
+       ]
+      },
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "009 devlog_entries, reactions",
+       "content": [
+        {
+         "type": "text",
+         "text": "`devlog_entries`: title, slug unique, content, `tags text[]`, published_at, reading_time_minutes. A GIN index on tags makes `tags @> ARRAY['nestjs']` fast. `reactions`: entry_id, emoji, count, **UNIQUE (entry_id, emoji)**."
+        },
+        {
+         "type": "text",
+         "text": "Increment safely with one statement, no read-then-write race:"
+        },
+        {
+         "type": "code",
+         "code": "INSERT INTO reactions (entry_id, emoji, count) VALUES ($1, $2, 1)\nON CONFLICT (entry_id, emoji) DO UPDATE SET count = reactions.count + 1;"
+        }
+       ]
+      },
+      {
+       "isYours": true,
+       "tag": "you",
+       "title": "010 auth_tokens",
+       "content": [
+        {
+         "type": "text",
+         "text": "user_id (CASCADE), `type` (email_verification, password_reset), `token_hash`, `expires_at`, `used_at` nullable. Index on token_hash. Phase 1 forgot-password needs this."
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "c14a",
+         "text": "All ten migrations run on an empty database"
+        },
+        {
+         "type": "check",
+         "id": "c14b",
+         "text": "Reverting all ten leaves only the `migrations` table"
+        }
+       ]
+      },
+      {
+       "title": "Journal",
+       "content": [
+        {
+         "type": "text",
+         "text": "Why store a hash of a token instead of the token? What is the difference between `ON DELETE SET NULL` and `CASCADE`, and why does audit data want the first?"
+        }
+       ]
+      }
+     ],
+     "order": 17
+    },
+    {
+     "slug": "15",
+     "title": "Seed script",
+     "durationMinutes": 45,
+     "heading": "Seed data",
+     "lead": "Sample categories and one admin, as a script you can run again safely.",
+     "content": [
+      {
+       "title": "Why a script, not a migration",
+       "content": [
+        {
+         "type": "text",
+         "text": "Migrations describe schema and run exactly once everywhere, including production. Sample data and a dev admin do not belong in production. A separate idempotent script lets you choose where to run it."
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "content": [
+        {
+         "type": "text",
+         "text": "Add to `.env.example`: `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD`. Never commit a real password, and never hard-code a default admin in source."
+        },
+        {
+         "type": "code",
+         "filename": "src/database/seed.ts (shape)",
+         "code": "import 'dotenv/config';\nimport * as argon2 from 'argon2';\nimport dataSource from './data-source';\n\nasync function seed() {\n  await dataSource.initialize();\n  const hash = await argon2.hash(process.env.SEED_ADMIN_PASSWORD!, {\n    type: argon2.argon2id,\n    memoryCost: 65536,\n    timeCost: 3,\n    parallelism: 4,\n  });\n\n  await dataSource.query(\n    `INSERT INTO users (email, password_hash, role, email_verified)\n     VALUES ($1, $2, 'admin', true)\n     ON CONFLICT DO NOTHING`,\n    [process.env.SEED_ADMIN_EMAIL!.toLowerCase(), hash],\n  );\n\n  // TODO (you): insert 3 root categories (IT, English, Life Skills)\n  // then sub-categories, each with ON CONFLICT (slug) DO NOTHING.\n  // Sub-categories need the parent id: use INSERT ... SELECT id FROM categories WHERE slug = ...\n\n  await dataSource.destroy();\n}\nvoid seed();"
+        },
+        {
+         "type": "text",
+         "text": "Add the script `\"seed\": \"ts-node -r tsconfig-paths/register src/database/seed.ts\"`."
+        },
+        {
+         "type": "text",
+         "text": "The memory, time and parallelism values are the OWASP-recommended Argon2id settings listed in your plan. Phase 1 will reuse them in the real password hasher."
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "c15a",
+         "text": "`npm run seed` twice gives the same row counts"
+        },
+        {
+         "type": "check",
+         "id": "c15b",
+         "text": "`password_hash` starts with `$argon2id$`"
+        },
+        {
+         "type": "check",
+         "id": "c15c",
+         "text": "3 root categories and at least 2 children each exist"
+        }
+       ]
+      }
+     ],
+     "order": 18
+    },
+    {
+     "slug": "16",
+     "title": "Verify, EXPLAIN, ER diagram",
+     "durationMinutes": 60,
+     "heading": "Prove it works",
+     "lead": "Roll everything back and forward, read query plans, and draw the diagram that goes in your journal.",
+     "content": [
+      {
+       "tag": "do",
+       "title": "Full cycle",
+       "content": [
+        {
+         "type": "code",
+         "code": "docker compose down -v\ndocker compose up -d postgres redis\nnpm run migration:run\nnpm run seed\n# revert all ten, one by one\nfor i in 1 2 3 4 5 6 7 8 9 10; do npm run migration:revert; done\nnpm run migration:run"
+        },
+        {
+         "type": "text",
+         "text": "Starting from `down -v` proves the migrations build the schema from nothing, not on top of leftovers."
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "title": "Read two query plans",
+       "content": [
+        {
+         "type": "text",
+         "text": "Add some rows first (a few hundred courses via `generate_series` makes plans meaningful), then run `ANALYZE courses;` and:"
+        },
+        {
+         "type": "code",
+         "code": "EXPLAIN ANALYZE\nSELECT id, title FROM courses\nWHERE status = 'published' AND domain = 'it'\nORDER BY published_at DESC LIMIT 20;\n\nEXPLAIN ANALYZE\nSELECT * FROM user_sessions\nWHERE user_id = '<some uuid>' AND is_revoked = false;"
+        },
+        {
+         "type": "text",
+         "text": "Look for `Index Scan` or `Index Only Scan` instead of `Seq Scan`. On a tiny table Postgres may still choose a sequential scan because it is cheaper. That is correct behavior, not a bug."
+        }
+       ]
+      },
+      {
+       "tag": "do",
+       "title": "Integration test",
+       "content": [
+        {
+         "type": "text",
+         "text": "One Jest test that runs all migrations on a throwaway database and checks `information_schema` for the tables, and `pg_indexes` for the key indexes. This becomes the base for Testcontainers in Phase 6."
+        }
+       ]
+      },
+      {
+       "tag": "done",
+       "content": [
+        {
+         "type": "check",
+         "id": "c16a",
+         "text": "Cold build, seed, revert-all and re-run all succeed"
+        },
+        {
+         "type": "check",
+         "id": "c16b",
+         "text": "You can show which index each of the two queries used"
+        },
+        {
+         "type": "check",
+         "id": "c16c",
+         "text": "Hand-drawn ER diagram saved with your journal"
+        }
+       ]
+      },
+      {
+       "title": "Phase 0.3 journal checklist",
+       "content": [
+        {
+         "type": "text",
+         "text": "Rate yourself on: uuid vs serial, partial index, compound index column order, deferred constraints, and why `synchronize: true` is dangerous in production. Then write the devlog entry for Phase 0."
+        }
+       ]
+      }
+     ],
+     "order": 19
+    }
+   ]
+  }
+ ]
+}

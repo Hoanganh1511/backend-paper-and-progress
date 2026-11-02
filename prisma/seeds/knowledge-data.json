@@ -1,0 +1,996 @@
+{
+ "domains": [
+  {
+   "slug": "cong-nghe-thong-tin",
+   "name": "Công nghệ thông tin",
+   "description": "Các nhóm công nghệ, công cụ và lộ trình trong lĩnh vực IT.",
+   "icon": "code",
+   "categories": [
+    {
+     "slug": "frontend",
+     "name": "Frontend",
+     "icon": "frontend",
+     "order": 0,
+     "topics": [
+      {
+       "slug": "react",
+       "name": "React",
+       "icon": "code",
+       "groupLabel": "Framework"
+      },
+      {
+       "slug": "vue",
+       "name": "Vue",
+       "icon": "code",
+       "groupLabel": "Framework"
+      },
+      {
+       "slug": "angular",
+       "name": "Angular",
+       "icon": "code",
+       "groupLabel": "Framework"
+      },
+      {
+       "slug": "svelte",
+       "name": "Svelte",
+       "icon": "code",
+       "groupLabel": "Framework"
+      },
+      {
+       "slug": "nextjs",
+       "name": "Next.js",
+       "icon": "code",
+       "groupLabel": "Framework"
+      },
+      {
+       "slug": "javascript",
+       "name": "JavaScript",
+       "icon": "terminal",
+       "groupLabel": "Ngôn ngữ"
+      },
+      {
+       "slug": "typescript",
+       "name": "TypeScript",
+       "icon": "terminal",
+       "groupLabel": "Ngôn ngữ"
+      },
+      {
+       "slug": "css",
+       "name": "CSS",
+       "icon": "design",
+       "groupLabel": "Giao diện và CSS"
+      },
+      {
+       "slug": "tailwind",
+       "name": "Tailwind CSS",
+       "icon": "design",
+       "groupLabel": "Giao diện và CSS"
+      },
+      {
+       "slug": "sass",
+       "name": "Sass",
+       "icon": "design",
+       "groupLabel": "Giao diện và CSS"
+      },
+      {
+       "slug": "styled-components",
+       "name": "Styled Components",
+       "icon": "design",
+       "groupLabel": "Giao diện và CSS"
+      },
+      {
+       "slug": "vite",
+       "name": "Vite",
+       "icon": "settings",
+       "groupLabel": "Công cụ"
+      },
+      {
+       "slug": "webpack",
+       "name": "Webpack",
+       "icon": "settings",
+       "groupLabel": "Công cụ"
+      },
+      {
+       "slug": "eslint",
+       "name": "ESLint",
+       "icon": "settings",
+       "groupLabel": "Công cụ"
+      },
+      {
+       "slug": "prettier",
+       "name": "Prettier",
+       "icon": "settings",
+       "groupLabel": "Công cụ"
+      }
+     ]
+    },
+    {
+     "slug": "backend",
+     "name": "Backend",
+     "icon": "backend",
+     "order": 1,
+     "topics": [
+      {
+       "slug": "nodejs",
+       "name": "Node.js",
+       "icon": "terminal",
+       "groupLabel": "Ngôn ngữ và Runtime"
+      },
+      {
+       "slug": "java",
+       "name": "Java",
+       "icon": "terminal",
+       "groupLabel": "Ngôn ngữ và Runtime"
+      },
+      {
+       "slug": "go",
+       "name": "Go",
+       "icon": "terminal",
+       "groupLabel": "Ngôn ngữ và Runtime"
+      },
+      {
+       "slug": "python-be",
+       "name": "Python",
+       "icon": "terminal",
+       "groupLabel": "Ngôn ngữ và Runtime"
+      },
+      {
+       "slug": "php",
+       "name": "PHP",
+       "icon": "terminal",
+       "groupLabel": "Ngôn ngữ và Runtime"
+      },
+      {
+       "slug": "dotnet",
+       "name": ".NET",
+       "icon": "terminal",
+       "groupLabel": "Ngôn ngữ và Runtime"
+      },
+      {
+       "slug": "express",
+       "name": "Express",
+       "icon": "server",
+       "groupLabel": "Framework"
+      },
+      {
+       "slug": "nestjs",
+       "name": "NestJS",
+       "icon": "server",
+       "groupLabel": "Framework"
+      },
+      {
+       "slug": "spring-boot",
+       "name": "Spring Boot",
+       "icon": "server",
+       "groupLabel": "Framework"
+      },
+      {
+       "slug": "django",
+       "name": "Django",
+       "icon": "server",
+       "groupLabel": "Framework"
+      },
+      {
+       "slug": "laravel",
+       "name": "Laravel",
+       "icon": "server",
+       "groupLabel": "Framework"
+      },
+      {
+       "slug": "postgresql",
+       "name": "PostgreSQL",
+       "icon": "database",
+       "groupLabel": "Cơ sở dữ liệu"
+      },
+      {
+       "slug": "mysql",
+       "name": "MySQL",
+       "icon": "database",
+       "groupLabel": "Cơ sở dữ liệu"
+      },
+      {
+       "slug": "mongodb",
+       "name": "MongoDB",
+       "icon": "database",
+       "groupLabel": "Cơ sở dữ liệu"
+      },
+      {
+       "slug": "redis",
+       "name": "Redis",
+       "icon": "database",
+       "groupLabel": "Cơ sở dữ liệu"
+      },
+      {
+       "slug": "rest",
+       "name": "REST",
+       "icon": "network",
+       "groupLabel": "API và giao tiếp"
+      },
+      {
+       "slug": "graphql",
+       "name": "GraphQL",
+       "icon": "network",
+       "groupLabel": "API và giao tiếp"
+      },
+      {
+       "slug": "grpc",
+       "name": "gRPC",
+       "icon": "network",
+       "groupLabel": "API và giao tiếp"
+      },
+      {
+       "slug": "websocket",
+       "name": "WebSocket",
+       "icon": "network",
+       "groupLabel": "API và giao tiếp"
+      }
+     ]
+    },
+    {
+     "slug": "devops",
+     "name": "DevOps và CI/CD",
+     "icon": "devops",
+     "order": 2,
+     "topics": [
+      {
+       "slug": "github-actions",
+       "name": "GitHub Actions",
+       "icon": "workflow",
+       "groupLabel": "CI/CD"
+      },
+      {
+       "slug": "gitlab-ci",
+       "name": "GitLab CI",
+       "icon": "workflow",
+       "groupLabel": "CI/CD"
+      },
+      {
+       "slug": "jenkins",
+       "name": "Jenkins",
+       "icon": "workflow",
+       "groupLabel": "CI/CD"
+      },
+      {
+       "slug": "argocd",
+       "name": "ArgoCD",
+       "icon": "workflow",
+       "groupLabel": "CI/CD"
+      },
+      {
+       "slug": "docker",
+       "name": "Docker",
+       "icon": "container",
+       "groupLabel": "Container và Orchestration"
+      },
+      {
+       "slug": "kubernetes",
+       "name": "Kubernetes",
+       "icon": "container",
+       "groupLabel": "Container và Orchestration"
+      },
+      {
+       "slug": "helm",
+       "name": "Helm",
+       "icon": "container",
+       "groupLabel": "Container và Orchestration"
+      },
+      {
+       "slug": "terraform",
+       "name": "Terraform",
+       "icon": "settings",
+       "groupLabel": "Hạ tầng dưới dạng mã"
+      },
+      {
+       "slug": "ansible",
+       "name": "Ansible",
+       "icon": "settings",
+       "groupLabel": "Hạ tầng dưới dạng mã"
+      },
+      {
+       "slug": "pulumi",
+       "name": "Pulumi",
+       "icon": "settings",
+       "groupLabel": "Hạ tầng dưới dạng mã"
+      },
+      {
+       "slug": "prometheus",
+       "name": "Prometheus",
+       "icon": "chart",
+       "groupLabel": "Giám sát và log"
+      },
+      {
+       "slug": "grafana",
+       "name": "Grafana",
+       "icon": "chart",
+       "groupLabel": "Giám sát và log"
+      },
+      {
+       "slug": "datadog",
+       "name": "Datadog",
+       "icon": "chart",
+       "groupLabel": "Giám sát và log"
+      },
+      {
+       "slug": "elk",
+       "name": "ELK Stack",
+       "icon": "chart",
+       "groupLabel": "Giám sát và log"
+      }
+     ]
+    },
+    {
+     "slug": "mobile",
+     "name": "Mobile",
+     "icon": "mobile",
+     "order": 3,
+     "topics": [
+      {
+       "slug": "swift",
+       "name": "Swift (iOS)",
+       "icon": "mobile",
+       "groupLabel": "Native"
+      },
+      {
+       "slug": "kotlin",
+       "name": "Kotlin (Android)",
+       "icon": "mobile",
+       "groupLabel": "Native"
+      },
+      {
+       "slug": "react-native",
+       "name": "React Native",
+       "icon": "mobile",
+       "groupLabel": "Cross-platform"
+      },
+      {
+       "slug": "flutter",
+       "name": "Flutter",
+       "icon": "mobile",
+       "groupLabel": "Cross-platform"
+      },
+      {
+       "slug": "ionic",
+       "name": "Ionic",
+       "icon": "mobile",
+       "groupLabel": "Cross-platform"
+      }
+     ]
+    },
+    {
+     "slug": "data",
+     "name": "Dữ liệu và AI",
+     "icon": "data",
+     "order": 4,
+     "topics": [
+      {
+       "slug": "python-data",
+       "name": "Python",
+       "icon": "terminal",
+       "groupLabel": "Xử lý dữ liệu"
+      },
+      {
+       "slug": "pandas",
+       "name": "Pandas",
+       "icon": "chart",
+       "groupLabel": "Xử lý dữ liệu"
+      },
+      {
+       "slug": "spark",
+       "name": "Apache Spark",
+       "icon": "chart",
+       "groupLabel": "Xử lý dữ liệu"
+      },
+      {
+       "slug": "airflow",
+       "name": "Airflow",
+       "icon": "workflow",
+       "groupLabel": "Xử lý dữ liệu"
+      },
+      {
+       "slug": "tensorflow",
+       "name": "TensorFlow",
+       "icon": "brain",
+       "groupLabel": "Machine Learning"
+      },
+      {
+       "slug": "pytorch",
+       "name": "PyTorch",
+       "icon": "brain",
+       "groupLabel": "Machine Learning"
+      },
+      {
+       "slug": "scikit-learn",
+       "name": "Scikit-learn",
+       "icon": "brain",
+       "groupLabel": "Machine Learning"
+      },
+      {
+       "slug": "bigquery",
+       "name": "BigQuery",
+       "icon": "database",
+       "groupLabel": "Data Warehouse và BI"
+      },
+      {
+       "slug": "snowflake",
+       "name": "Snowflake",
+       "icon": "database",
+       "groupLabel": "Data Warehouse và BI"
+      },
+      {
+       "slug": "power-bi",
+       "name": "Power BI",
+       "icon": "chart",
+       "groupLabel": "Data Warehouse và BI"
+      }
+     ]
+    },
+    {
+     "slug": "security",
+     "name": "Bảo mật",
+     "icon": "security",
+     "order": 5,
+     "topics": [
+      {
+       "slug": "owasp",
+       "name": "OWASP Top 10",
+       "icon": "shield",
+       "groupLabel": "An toàn ứng dụng"
+      },
+      {
+       "slug": "auth",
+       "name": "Xác thực và phân quyền",
+       "icon": "lock",
+       "groupLabel": "An toàn ứng dụng"
+      },
+      {
+       "slug": "pentest",
+       "name": "Kiểm thử xâm nhập",
+       "icon": "shield",
+       "groupLabel": "An toàn ứng dụng"
+      },
+      {
+       "slug": "firewall",
+       "name": "Firewall",
+       "icon": "lock",
+       "groupLabel": "An toàn mạng"
+      },
+      {
+       "slug": "vpn",
+       "name": "VPN",
+       "icon": "lock",
+       "groupLabel": "An toàn mạng"
+      },
+      {
+       "slug": "zero-trust",
+       "name": "Zero Trust",
+       "icon": "shield",
+       "groupLabel": "An toàn mạng"
+      }
+     ]
+    },
+    {
+     "slug": "cloud",
+     "name": "Cloud và hạ tầng",
+     "icon": "cloud",
+     "order": 6,
+     "topics": [
+      {
+       "slug": "aws",
+       "name": "AWS",
+       "icon": "cloud",
+       "groupLabel": "Nhà cung cấp"
+      },
+      {
+       "slug": "gcp",
+       "name": "Google Cloud",
+       "icon": "cloud",
+       "groupLabel": "Nhà cung cấp"
+      },
+      {
+       "slug": "azure",
+       "name": "Microsoft Azure",
+       "icon": "cloud",
+       "groupLabel": "Nhà cung cấp"
+      },
+      {
+       "slug": "lambda",
+       "name": "AWS Lambda",
+       "icon": "cloud",
+       "groupLabel": "Serverless"
+      },
+      {
+       "slug": "cloud-functions",
+       "name": "Cloud Functions",
+       "icon": "cloud",
+       "groupLabel": "Serverless"
+      },
+      {
+       "slug": "vercel",
+       "name": "Vercel",
+       "icon": "cloud",
+       "groupLabel": "Serverless"
+      }
+     ]
+    },
+    {
+     "slug": "qa",
+     "name": "Kiểm thử (QA)",
+     "icon": "qa",
+     "order": 7,
+     "topics": [
+      {
+       "slug": "cypress",
+       "name": "Cypress",
+       "icon": "test",
+       "groupLabel": "Kiểm thử tự động"
+      },
+      {
+       "slug": "playwright",
+       "name": "Playwright",
+       "icon": "test",
+       "groupLabel": "Kiểm thử tự động"
+      },
+      {
+       "slug": "selenium",
+       "name": "Selenium",
+       "icon": "test",
+       "groupLabel": "Kiểm thử tự động"
+      },
+      {
+       "slug": "test-case",
+       "name": "Viết test case",
+       "icon": "test",
+       "groupLabel": "Kiểm thử thủ công và quy trình"
+      },
+      {
+       "slug": "bug-tracking",
+       "name": "Theo dõi lỗi",
+       "icon": "test",
+       "groupLabel": "Kiểm thử thủ công và quy trình"
+      },
+      {
+       "slug": "qa-workflow",
+       "name": "Quy trình QA",
+       "icon": "test",
+       "groupLabel": "Kiểm thử thủ công và quy trình"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "finance",
+   "name": "Tài chính",
+   "description": null,
+   "icon": "finance",
+   "categories": [
+    {
+     "slug": "finance-personal-finance",
+     "name": "Tài chính cá nhân",
+     "description": "Làm chủ dòng tiền hằng tháng.",
+     "icon": "book",
+     "order": 0,
+     "topics": [
+      {
+       "slug": "budgeting",
+       "name": "Lập ngân sách đơn giản",
+       "description": "Chia thu nhập thành các khoản rõ ràng.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "emergency-fund",
+       "name": "Quỹ khẩn cấp",
+       "description": "Cần bao nhiêu và giữ ở đâu cho hợp lý.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "debt",
+       "name": "Quản lý nợ",
+       "description": "Thứ tự trả nợ và tránh bẫy lãi suất.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "insurance",
+       "name": "Bảo hiểm cho người mới",
+       "description": "Chọn đúng loại và đúng mức bảo vệ.",
+       "icon": "book",
+       "groupLabel": null
+      }
+     ]
+    },
+    {
+     "slug": "finance-investing",
+     "name": "Đầu tư",
+     "description": "Tăng tài sản có kỷ luật.",
+     "icon": "book",
+     "order": 1,
+     "topics": [
+      {
+       "slug": "investing-basics",
+       "name": "Đầu tư căn bản",
+       "description": "Rủi ro, lợi nhuận và đa dạng hóa.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "funds",
+       "name": "Quỹ chỉ số và ETF",
+       "description": "Đầu tư dài hạn với chi phí thấp.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "stocks",
+       "name": "Đọc báo cáo doanh nghiệp",
+       "description": "Hiểu doanh thu, lợi nhuận và dòng tiền.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "real-estate",
+       "name": "Bất động sản dưới góc nhìn tài chính",
+       "description": "Dòng tiền, đòn bẩy và chi phí ẩn.",
+       "icon": "book",
+       "groupLabel": null
+      }
+     ]
+    },
+    {
+     "slug": "finance-tax-accounting",
+     "name": "Thuế và kế toán",
+     "description": "Hiểu nghĩa vụ và sổ sách.",
+     "icon": "book",
+     "order": 2,
+     "topics": [
+      {
+       "slug": "income-tax",
+       "name": "Thuế thu nhập cá nhân",
+       "description": "Cách tính, giảm trừ và quyết toán.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "bookkeeping",
+       "name": "Sổ sách cho hộ kinh doanh",
+       "description": "Ghi chép thu chi đúng và đủ.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "financial-statements",
+       "name": "Đọc báo cáo tài chính",
+       "description": "Bảng cân đối, kết quả kinh doanh, lưu chuyển tiền.",
+       "icon": "book",
+       "groupLabel": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "health",
+   "name": "Sức khỏe",
+   "description": null,
+   "icon": "health",
+   "categories": [
+    {
+     "slug": "health-nutrition",
+     "name": "Dinh dưỡng",
+     "description": "Ăn đủ, ăn đúng, ăn bền vững.",
+     "icon": "book",
+     "order": 0,
+     "topics": [
+      {
+       "slug": "macros",
+       "name": "Đạm, tinh bột, chất béo",
+       "description": "Vai trò của từng nhóm và khẩu phần hợp lý.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "meal-prep",
+       "name": "Chuẩn bị bữa ăn cả tuần",
+       "description": "Lên thực đơn và nấu sẵn tiết kiệm thời gian.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "labels",
+       "name": "Đọc nhãn thực phẩm",
+       "description": "Nhận ra đường, muối và phụ gia ẩn.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "diet-myths",
+       "name": "Những hiểu lầm về ăn kiêng",
+       "description": "Đối chiếu quan điểm phổ biến với bằng chứng.",
+       "icon": "book",
+       "groupLabel": null
+      }
+     ]
+    },
+    {
+     "slug": "health-fitness",
+     "name": "Vận động",
+     "description": "Xây thói quen tập luyện lâu dài.",
+     "icon": "book",
+     "order": 1,
+     "topics": [
+      {
+       "slug": "walking",
+       "name": "Đi bộ mỗi ngày",
+       "description": "Tăng vận động mà không cần phòng tập.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "strength",
+       "name": "Tập sức mạnh tại nhà",
+       "description": "Bài tập cơ bản với dụng cụ tối thiểu.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "mobility",
+       "name": "Giãn cơ và linh hoạt",
+       "description": "Giảm đau lưng, cổ vai khi làm việc nhiều.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "running",
+       "name": "Chạy bộ cho người mới",
+       "description": "Từ 0 đến 5 km trong 8 tuần.",
+       "icon": "book",
+       "groupLabel": null
+      }
+     ]
+    },
+    {
+     "slug": "health-sleep-mind",
+     "name": "Giấc ngủ và tinh thần",
+     "description": "Phục hồi và giữ cân bằng.",
+     "icon": "book",
+     "order": 2,
+     "topics": [
+      {
+       "slug": "sleep",
+       "name": "Ngủ ngon hơn",
+       "description": "Thói quen buổi tối và môi trường phòng ngủ.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "stress",
+       "name": "Quản lý căng thẳng",
+       "description": "Kỹ thuật thở, ghi chép và đặt ranh giới.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "mindfulness",
+       "name": "Chánh niệm mỗi ngày",
+       "description": "Thực hành ngắn để tập trung và bình tĩnh.",
+       "icon": "book",
+       "groupLabel": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "ngoai-ngu",
+   "name": "Ngoại ngữ",
+   "description": null,
+   "icon": "language",
+   "categories": [
+    {
+     "slug": "language-english",
+     "name": "Tiếng Anh",
+     "description": "Giao tiếp và làm việc quốc tế.",
+     "icon": "book",
+     "order": 0,
+     "topics": [
+      {
+       "slug": "en-grammar",
+       "name": "Ngữ pháp thực dụng",
+       "description": "Những cấu trúc dùng nhiều nhất trong công việc.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "en-speaking",
+       "name": "Phản xạ nói",
+       "description": "Luyện nói theo tình huống hằng ngày.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "en-writing",
+       "name": "Viết email chuyên nghiệp",
+       "description": "Ngắn gọn, lịch sự và rõ yêu cầu.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "en-ielts",
+       "name": "Chiến lược thi IELTS",
+       "description": "Phân bổ thời gian và tránh lỗi mất điểm.",
+       "icon": "book",
+       "groupLabel": null
+      }
+     ]
+    },
+    {
+     "slug": "language-japanese",
+     "name": "Tiếng Nhật",
+     "description": "Từ bảng chữ cái đến hội thoại.",
+     "icon": "book",
+     "order": 1,
+     "topics": [
+      {
+       "slug": "jp-kana",
+       "name": "Hiragana và Katakana",
+       "description": "Học thuộc bảng chữ trong hai tuần.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "jp-n5",
+       "name": "Giao tiếp sơ cấp N5",
+       "description": "Tự giới thiệu, mua sắm và hỏi đường.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "jp-kanji",
+       "name": "Kanji theo bộ thủ",
+       "description": "Ghi nhớ chữ Hán bằng cách chia nhỏ.",
+       "icon": "book",
+       "groupLabel": null
+      }
+     ]
+    },
+    {
+     "slug": "language-chinese",
+     "name": "Tiếng Trung",
+     "description": "Phát âm, thanh điệu và chữ Hán.",
+     "icon": "book",
+     "order": 2,
+     "topics": [
+      {
+       "slug": "zh-pinyin",
+       "name": "Phát âm và Pinyin",
+       "description": "Làm chủ thanh điệu ngay từ đầu.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "zh-hsk1",
+       "name": "Luyện HSK 1–2",
+       "description": "Từ vựng và mẫu câu nền tảng.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "zh-business",
+       "name": "Tiếng Trung thương mại",
+       "description": "Từ vựng và tình huống đàm phán.",
+       "icon": "book",
+       "groupLabel": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "soft-skills",
+   "name": "Kỹ năng mềm",
+   "description": null,
+   "icon": "soft-skills",
+   "categories": [
+    {
+     "slug": "soft-skills-communication",
+     "name": "Giao tiếp",
+     "description": "Truyền đạt rõ và lắng nghe tốt.",
+     "icon": "book",
+     "order": 0,
+     "topics": [
+      {
+       "slug": "active-listening",
+       "name": "Lắng nghe chủ động",
+       "description": "Hỏi đúng câu và phản hồi có chủ đích.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "presenting",
+       "name": "Thuyết trình tự tin",
+       "description": "Cấu trúc bài nói và xử lý hồi hộp.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "feedback",
+       "name": "Cho và nhận phản hồi",
+       "description": "Nói thẳng mà vẫn giữ được mối quan hệ.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "negotiation",
+       "name": "Đàm phán cơ bản",
+       "description": "Chuẩn bị, mặc cả và đạt thỏa thuận đôi bên cùng có lợi.",
+       "icon": "book",
+       "groupLabel": null
+      }
+     ]
+    },
+    {
+     "slug": "soft-skills-productivity",
+     "name": "Năng suất",
+     "description": "Làm ít hơn nhưng đúng việc.",
+     "icon": "book",
+     "order": 1,
+     "topics": [
+      {
+       "slug": "time-blocking",
+       "name": "Chia khối thời gian",
+       "description": "Dành chỗ cho việc quan trọng trong lịch.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "prioritizing",
+       "name": "Ưu tiên công việc",
+       "description": "Ma trận khẩn cấp và quan trọng trong thực tế.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "deep-work",
+       "name": "Làm việc sâu",
+       "description": "Bảo vệ sự tập trung khỏi gián đoạn.",
+       "icon": "book",
+       "groupLabel": null
+      }
+     ]
+    },
+    {
+     "slug": "soft-skills-critical-thinking",
+     "name": "Tư duy phản biện",
+     "description": "Đánh giá thông tin và ra quyết định.",
+     "icon": "book",
+     "order": 2,
+     "topics": [
+      {
+       "slug": "logic",
+       "name": "Nhận diện ngụy biện",
+       "description": "Những lỗi lập luận gặp hằng ngày.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "decisions",
+       "name": "Ra quyết định dưới bất định",
+       "description": "Khung đánh đổi và đo lường rủi ro.",
+       "icon": "book",
+       "groupLabel": null
+      },
+      {
+       "slug": "sources",
+       "name": "Kiểm chứng nguồn tin",
+       "description": "Phân biệt bằng chứng, ý kiến và quảng cáo.",
+       "icon": "book",
+       "groupLabel": null
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

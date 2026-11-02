@@ -1,0 +1,128 @@
+[
+  {
+    "phrase": "meet a deadline",
+    "sentence": "We need to meet the deadline by Friday.",
+    "matched": true
+  },
+  {
+    "phrase": "meet a deadline",
+    "sentence": "She met the deadline easily.",
+    "matched": true
+  },
+  {
+    "phrase": "meet a deadline",
+    "sentence": "He is meeting deadlines every week.",
+    "matched": true
+  },
+  {
+    "phrase": "meet a deadline",
+    "sentence": "Our team meets a deadline each Monday.",
+    "matched": true
+  },
+  {
+    "phrase": "meet a deadline",
+    "sentence": "We must meet our tight deadline.",
+    "matched": true
+  },
+  {
+    "phrase": "meet a deadline",
+    "sentence": "MEET A DEADLINE!",
+    "matched": true
+  },
+  {
+    "phrase": "meet a deadline",
+    "sentence": "I meet him every day, and the deadline is Friday.",
+    "matched": false
+  },
+  {
+    "phrase": "meet a deadline",
+    "sentence": "The deadline is tomorrow.",
+    "matched": false
+  },
+  {
+    "phrase": "meet a deadline",
+    "sentence": "We met on Friday.",
+    "matched": false
+  },
+  {
+    "phrase": "meet a deadline",
+    "sentence": "Deadline meet.",
+    "matched": false
+  },
+  {
+    "phrase": "to run out of time",
+    "sentence": "We are running out of time.",
+    "matched": true
+  },
+  {
+    "phrase": "to run out of time",
+    "sentence": "They ran out of time.",
+    "matched": true
+  },
+  {
+    "phrase": "stop doing",
+    "sentence": "She stopped doing it.",
+    "matched": true
+  },
+  {
+    "phrase": "make a decision",
+    "sentence": "I am making a decision today.",
+    "matched": true
+  },
+  {
+    "phrase": "make a decision",
+    "sentence": "He made the decision quickly.",
+    "matched": true
+  },
+  {
+    "phrase": "make a decision",
+    "sentence": "He made it very happy for all; decisions are hard.",
+    "matched": false
+  },
+  {
+    "phrase": "have an accident",
+    "sentence": "He has had an accident.",
+    "matched": true
+  },
+  {
+    "phrase": "have an accident",
+    "sentence": "They had accidents last year.",
+    "matched": true
+  },
+  {
+    "phrase": "catch up with sb",
+    "sentence": "I will catch up with my old friend.",
+    "matched": true
+  },
+  {
+    "phrase": "catch up with sb",
+    "sentence": "She caught up with him.",
+    "matched": true
+  },
+  {
+    "phrase": "catch up with sb",
+    "sentence": "I will catch up on sleep.",
+    "matched": false
+  },
+  {
+    "phrase": "afraid of/about",
+    "sentence": "She is afraid about the exam.",
+    "matched": true
+  },
+  {
+    "phrase": "take part in",
+    "sentence": "Everyone took part in the game.",
+    "matched": true
+  },
+  {
+    "phrase": "take part in",
+    "sentence": "Taking part is fun.",
+    "matched": false
+  },
+  {
+    "phrase": "deadline",
+    "sentence": "The deadlines are close.",
+    "matched": true
+  },
+  { "phrase": "", "sentence": "Anything at all.", "matched": false }
+]
