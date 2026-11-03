@@ -5,16 +5,57 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { DailyLesson, UserDailyProgress } from '@prisma/client';
+import type {
+  DailyLesson,
+  UserDailyProgress,
+  VocabularyWord,
+} from '@prisma/client';
 import { PrismaService } from '../../../shared/database/prisma.service.js';
 import type { SubmitLearnDto } from '../dto/submit-learn.dto.js';
 import type { SubmitPracticeDto } from '../dto/submit-practice.dto.js';
 import type { SubmitTestDto } from '../dto/submit-test.dto.js';
 import type { PracticeAnswer, WordResult } from '../types/quiz.types.js';
+import type {
+  AddWordEntryDto,
+  EntryKind,
+  SetWordMarkDto,
+} from '../dto/word-entry.dto.js';
+import { containsPhrase } from './phrase-matcher.js';
 import { QuizGeneratorService, hashSeed } from './quiz-generator.service.js';
 import { VocabularyService } from './vocabulary.service.js';
 
 export const PASS_SCORE = 70;
+/** Sentences the learner must write for each word before the word counts as learned. */
+export const SENTENCES_PER_WORD = 5;
+/** How many of each kind a word keeps; only sentences are required. */
+export const MAX_ENTRIES: Record<EntryKind, number> = {
+  SENTENCE: SENTENCES_PER_WORD,
+  COLLOCATION: 20,
+  RELATED: 20,
+  WORD_FAMILY: 20,
+  PHRASAL_VERB: 20,
+  WORD_PATTERN: 20,
+  WORD_FORMATION: 20,
+  DEPENDENT_PREPOSITION: 20,
+  SYNONYM: 20,
+  ANTONYM: 20,
+  CONVERSATION: 20,
+};
+/** Kinds whose text has to use the word itself; the others are about other words. */
+const MUST_USE_WORD = new Set<EntryKind>(['SENTENCE', 'COLLOCATION']);
+const ENTRY_LABELS: Record<EntryKind, string> = {
+  SENTENCE: 'câu',
+  COLLOCATION: 'cụm từ',
+  RELATED: 'từ liên quan',
+  WORD_FAMILY: 'dạng từ',
+  PHRASAL_VERB: 'phrasal verb',
+  WORD_PATTERN: 'cấu trúc',
+  WORD_FORMATION: 'cách tạo từ',
+  DEPENDENT_PREPOSITION: 'giới từ đi kèm',
+  SYNONYM: 'từ đồng nghĩa',
+  ANTONYM: 'từ trái nghĩa',
+  CONVERSATION: 'hội thoại',
+};
 /** A lesson with fewer words than this is "not ready": its words are still to be written. */
 export const MIN_READY_WORDS = 15;
 const TEST_QUESTIONS = 10;
@@ -24,6 +65,48 @@ const FINAL_TEST_SECONDS = 900;
 const CACHE_MS = 60_000;
 
 const dateKey = (date: Date) => date.toISOString().slice(0, 10);
+
+/** The ten learning categories an admin writes for a word (see the vocabulary admin). */
+const CONTENT_KEYS = [
+  'wordFamily',
+  'collocations',
+  'phrasalVerbs',
+  'wordPatterns',
+  'wordFormation',
+  'dependentPrepositions',
+  'synonyms',
+  'antonyms',
+  'relatedVocabulary',
+  'conversations',
+] as const;
+
+/**
+ * A word as the lesson shows it: the card's fields, what kind of word it is, and
+ * the learning categories that have something in them (an empty one is left out,
+ * so a word seeded without them costs nothing).
+ */
+export function toLearnWord(word: VocabularyWord) {
+  const content: Record<string, unknown[]> = {};
+  for (const key of CONTENT_KEYS) {
+    const items: unknown = word[key];
+    if (Array.isArray(items) && items.length > 0) content[key] = items;
+  }
+  return {
+    id: word.id,
+    word: word.word,
+    meaning: word.meaning,
+    example: word.example,
+    contrast: word.contrast,
+    forms: word.forms,
+    pattern: word.pattern,
+    pronunciation: word.pronunciation,
+    partsOfSpeech: word.partsOfSpeech,
+    level: word.level,
+    topics: word.topics,
+    meaningVi: word.meaningVi,
+    content,
+  };
+}
 
 interface LessonContext {
   lesson: DailyLesson;
@@ -83,9 +166,10 @@ export class DailyGateService {
     if (!context) return this.noLessonToday();
 
     const { lesson, wordCount } = context;
-    const [units, progress] = await Promise.all([
+    const [units, progress, learnedWords] = await Promise.all([
       this.vocabulary.unitsByIds(lesson.unitIds),
       this.ensureProgress(userId, lesson.id),
+      this.learnedWordCount(userId, lesson.id),
     ]);
     return {
       active: true as const,
@@ -95,10 +179,39 @@ export class DailyGateService {
       type: lesson.type,
       units,
       totalWords: wordCount,
+      // words with all their sentences written
+      learnedWords,
       // false while the words of these units are still to be written
       isReady: wordCount >= MIN_READY_WORDS,
       progress: this.publicProgress(progress),
     };
+  }
+
+  /**
+   * The ids of today's words the learner has learned: marked "known", or with
+   * all the sentences written. Flipping through the cards counts for nothing.
+   */
+  private async learnedWordIds(userId: string, lessonId: number) {
+    const [counts, known] = await Promise.all([
+      this.prisma.wordEntry.groupBy({
+        by: ['wordId'],
+        where: { userId, lessonId, kind: 'SENTENCE' },
+        _count: { _all: true },
+      }),
+      this.prisma.wordMark.findMany({
+        where: { userId, lessonId, mark: 'KNOWN' },
+        select: { wordId: true },
+      }),
+    ]);
+    const learned = new Set(known.map((row) => row.wordId));
+    for (const count of counts) {
+      if (count._count._all >= SENTENCES_PER_WORD) learned.add(count.wordId);
+    }
+    return learned;
+  }
+
+  private async learnedWordCount(userId: string, lessonId: number) {
+    return (await this.learnedWordIds(userId, lessonId)).size;
   }
 
   private async noLessonToday() {
@@ -137,22 +250,137 @@ export class DailyGateService {
       unitTopic: units.map((unit) => unit.topic).join(' · '),
       sections: this.vocabulary.groupBySection(words).map((section) => ({
         type: section.type,
-        words: section.words.map((word) => ({
-          id: word.id,
-          word: word.word,
-          meaning: word.meaning,
-          example: word.example,
-          contrast: word.contrast,
-          forms: word.forms,
-          pattern: word.pattern,
-        })),
+        words: section.words.map(toLearnWord),
       })),
       totalWords: words.length,
+      sentencesPerWord: SENTENCES_PER_WORD,
+      entries: await this.entriesByWord(userId, lesson.id),
+      marks: await this.marksByWord(userId, lesson.id),
     };
+  }
+
+  /** What the user has written today, by word id; kept on the server so it survives a reload. */
+  private async entriesByWord(userId: string, lessonId: number) {
+    const rows = await this.prisma.wordEntry.findMany({
+      where: { userId, lessonId },
+      orderBy: { id: 'asc' },
+    });
+    const byWord: Record<
+      number,
+      { id: number; kind: EntryKind; text: string }[]
+    > = {};
+    for (const row of rows) {
+      (byWord[row.wordId] ??= []).push({
+        id: row.id,
+        kind: row.kind,
+        text: row.text,
+      });
+    }
+    return byWord;
+  }
+
+  private async marksByWord(userId: string, lessonId: number) {
+    const rows = await this.prisma.wordMark.findMany({
+      where: { userId, lessonId },
+    });
+    const byWord: Record<number, 'known' | 'review'> = {};
+    for (const row of rows) {
+      byWord[row.wordId] = row.mark === 'KNOWN' ? 'known' : 'review';
+    }
+    return byWord;
+  }
+
+  async addEntry(userId: string, dto: AddWordEntryDto) {
+    const { lesson } = await this.requireReadyLesson(dto.lessonId);
+    const words = await this.vocabulary.wordsOfUnits(lesson.unitIds);
+    const word = words.find((candidate) => candidate.id === dto.wordId);
+    if (!word) throw new BadRequestException('Từ này không thuộc bài hôm nay.');
+
+    const kind = dto.kind ?? 'SENTENCE';
+    const text = dto.text.trim();
+    // A sentence or a collocation must use the word; a related word is a different word.
+    if (MUST_USE_WORD.has(kind) && !containsPhrase(word.word, text)) {
+      throw new BadRequestException(
+        `${kind === 'SENTENCE' ? 'Câu' : 'Cụm từ'} chưa có “${word.word}”.`,
+      );
+    }
+    const existing = await this.prisma.wordEntry.findMany({
+      where: { userId, lessonId: lesson.id, wordId: word.id },
+      orderBy: { id: 'asc' },
+    });
+    const ofKind = existing.filter((row) => row.kind === kind);
+    const key = (value: string) => value.toLowerCase().replace(/\s+/g, ' ');
+    if (ofKind.some((row) => key(row.text) === key(text))) {
+      throw new BadRequestException(
+        `Bạn đã thêm ${ENTRY_LABELS[kind]} này rồi.`,
+      );
+    }
+    if (ofKind.length >= MAX_ENTRIES[kind]) {
+      throw new BadRequestException(
+        `Từ này đã đủ ${MAX_ENTRIES[kind]} ${ENTRY_LABELS[kind]}.`,
+      );
+    }
+    const created = await this.prisma.wordEntry.create({
+      data: { userId, lessonId: lesson.id, wordId: word.id, kind, text },
+    });
+    return {
+      entries: [...existing, created].map((row) => ({
+        id: row.id,
+        kind: row.kind,
+        text: row.text,
+      })),
+    };
+  }
+
+  async removeEntry(userId: string, id: number) {
+    const { lesson } = await this.requireReadyLesson();
+    const row = await this.prisma.wordEntry.findFirst({
+      where: { id, userId, lessonId: lesson.id },
+    });
+    if (!row) throw new NotFoundException('Không tìm thấy mục này.');
+    await this.prisma.wordEntry.delete({ where: { id } });
+    return { deleted: true as const };
+  }
+
+  async setMark(userId: string, dto: SetWordMarkDto) {
+    const { lesson } = await this.requireReadyLesson(dto.lessonId);
+    const words = await this.vocabulary.wordsOfUnits(lesson.unitIds);
+    if (!words.some((word) => word.id === dto.wordId)) {
+      throw new BadRequestException('Từ này không thuộc bài hôm nay.');
+    }
+    if (!dto.mark) {
+      await this.prisma.wordMark.deleteMany({
+        where: { userId, lessonId: lesson.id, wordId: dto.wordId },
+      });
+      return { mark: null };
+    }
+    const mark = dto.mark === 'known' ? 'KNOWN' : 'REVIEW';
+    await this.prisma.wordMark.upsert({
+      where: {
+        userId_lessonId_wordId: {
+          userId,
+          lessonId: lesson.id,
+          wordId: dto.wordId,
+        },
+      },
+      create: { userId, lessonId: lesson.id, wordId: dto.wordId, mark },
+      update: { mark },
+    });
+    return { mark: dto.mark };
   }
 
   async completeLearn(userId: string, { lessonId }: SubmitLearnDto) {
     const { lesson } = await this.requireReadyLesson(lessonId);
+    const [words, learned] = await Promise.all([
+      this.vocabulary.wordsOfUnits(lesson.unitIds),
+      this.learnedWordIds(userId, lesson.id),
+    ]);
+    const missing = words.filter((word) => !learned.has(word.id));
+    if (missing.length > 0) {
+      throw new BadRequestException(
+        `Còn ${missing.length} từ chưa học: đặt đủ ${SENTENCES_PER_WORD} câu hoặc đánh dấu “Đã biết”.`,
+      );
+    }
     const progress = await this.prisma.userDailyProgress.upsert({
       where: { userId_lessonId: { userId, lessonId: lesson.id } },
       create: { userId, lessonId: lesson.id, learnCompleted: true },

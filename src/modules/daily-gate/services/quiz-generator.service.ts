@@ -1,5 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import type { VocabularyWord, VocabSection } from '@prisma/client';
+
+/** What a question is made from: the quiz does not depend on the other columns of a word. */
+export type QuizWord = Pick<
+  VocabularyWord,
+  | 'id'
+  | 'section'
+  | 'word'
+  | 'meaning'
+  | 'example'
+  | 'contrast'
+  | 'forms'
+  | 'pattern'
+  | 'unitId'
+>;
 import type {
   ChoiceQuestion,
   MatchingQuestion,
@@ -62,7 +76,7 @@ const wordRegExp = (word: string) =>
   new RegExp(`(?<![\\w])${escapeRegExp(word)}(?![\\w])`, 'i');
 
 /** True when the example holds the word exactly, so it can be blanked out. */
-export const canBlank = (word: VocabularyWord) =>
+export const canBlank = (word: QuizWord) =>
   Boolean(word.example && wordRegExp(word.word).test(word.example));
 
 export const blankOut = (example: string, word: string) =>
@@ -81,7 +95,7 @@ const contrastMembers = (contrast: string) =>
     .map((part) => part.trim())
     .filter(Boolean);
 
-const bySection = (words: VocabularyWord[], ...sections: VocabSection[]) =>
+const bySection = (words: QuizWord[], ...sections: VocabSection[]) =>
   words.filter((word) => sections.includes(word.section));
 
 /** Up to `count` values other than `correct`, no repeats. */
@@ -107,11 +121,11 @@ function placeCorrect(
 
 /** Takes words from `candidates`, first the ones not used yet. */
 function pickWords(
-  candidates: VocabularyWord[],
+  candidates: QuizWord[],
   count: number,
   used: Set<number>,
   random: Random,
-): VocabularyWord[] {
+): QuizWord[] {
   const fresh = shuffle(
     candidates.filter((word) => !used.has(word.id)),
     random,
@@ -128,7 +142,7 @@ function pickWords(
   return picked;
 }
 
-const explain = (word: VocabularyWord) =>
+const explain = (word: QuizWord) =>
   word.contrast
     ? `"${word.word}": ${word.meaning}. Compare: ${word.contrast}.`
     : `"${word.word}": ${word.meaning}.`;
@@ -138,7 +152,7 @@ const explain = (word: VocabularyWord) =>
 @Injectable()
 export class QuizGeneratorService {
   /** 5 matching, 5 fill-in-the-blank and 5 "choose the right word of a confusing group". */
-  generatePractice(words: VocabularyWord[], seed: number): PracticeQuestion[] {
+  generatePractice(words: QuizWord[], seed: number): PracticeQuestion[] {
     const random = createRandom(seed);
     const used = new Set<number>();
     const questions: PracticeQuestion[] = [];
@@ -232,11 +246,7 @@ export class QuizGeneratorService {
   }
 
   /** `count` multiple-choice questions that mix meaning, context, word formation and patterns. */
-  generateTest(
-    words: VocabularyWord[],
-    seed: number,
-    count: number,
-  ): TestQuestion[] {
+  generateTest(words: QuizWord[], seed: number, count: number): TestQuestion[] {
     const random = createRandom(seed);
     const used = new Set<number>();
     const meaningWords = words.filter((word) =>
@@ -253,7 +263,7 @@ export class QuizGeneratorService {
     );
 
     type Kind = 'MEANING' | 'BLANK' | 'FORMATION' | 'PATTERN';
-    const pools: Record<Kind, VocabularyWord[]> = {
+    const pools: Record<Kind, QuizWord[]> = {
       MEANING: meaningWords,
       BLANK: blankable,
       FORMATION: formation,

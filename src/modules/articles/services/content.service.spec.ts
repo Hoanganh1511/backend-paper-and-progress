@@ -15,6 +15,15 @@ const config = {
 const service = new ContentService(config as never);
 
 describe('ContentService.sanitize', () => {
+  it('keeps a blank line the writer left on purpose: an empty paragraph, or one of spaces', () => {
+    expect(service.sanitize('<p>a</p><p></p><p></p><p>b</p>')).toBe(
+      '<p>a</p><p></p><p></p><p>b</p>',
+    );
+    expect(service.sanitize('<p>a</p><p>   </p><p>b</p>')).toBe(
+      '<p>a</p><p>   </p><p>b</p>',
+    );
+  });
+
   it('removes scripts, event handlers and javascript: links', () => {
     const html = service.sanitize(
       '<p onclick="x()">Hi</p><script>alert(1)</script>' +

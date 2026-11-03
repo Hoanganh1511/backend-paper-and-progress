@@ -14,6 +14,9 @@ import { KnowledgeModule } from './modules/knowledge/knowledge.module.js';
 import { LearningPathsModule } from './modules/learning-paths/learning-paths.module.js';
 import { ArticlesModule } from './modules/articles/articles.module.js';
 import { MembershipModule } from './modules/membership/membership.module.js';
+import { CertificatesModule } from './modules/certificates/certificates.module.js';
+import { StudyListsModule } from './modules/study-lists/study-lists.module.js';
+import { VocabularyAdminModule } from './modules/vocabulary-admin/vocabulary-admin.module.js';
 import { DailyGateModule } from './modules/daily-gate/daily-gate.module.js';
 
 @Module({
@@ -34,6 +37,9 @@ import { DailyGateModule } from './modules/daily-gate/daily-gate.module.js';
     LearningActivityModule,
     KnowledgeModule,
     LearningPathsModule,
+    CertificatesModule,
+    StudyListsModule,
+    VocabularyAdminModule,
   ],
 })
 export class AppModule {}

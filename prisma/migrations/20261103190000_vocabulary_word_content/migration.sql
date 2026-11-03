@@ -1,0 +1,21 @@
+-- CreateEnum
+CREATE TYPE "CefrLevel" AS ENUM ('A1', 'A2', 'B1', 'B2', 'C1', 'C2');
+
+-- AlterTable
+ALTER TABLE "VocabularyWord"
+ADD COLUMN "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN "pronunciation" TEXT,
+ADD COLUMN "partsOfSpeech" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN "level" "CefrLevel",
+ADD COLUMN "topics" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN "meaningVi" TEXT,
+ADD COLUMN "wordFamily" JSONB NOT NULL DEFAULT '[]',
+ADD COLUMN "collocations" JSONB NOT NULL DEFAULT '[]',
+ADD COLUMN "phrasalVerbs" JSONB NOT NULL DEFAULT '[]',
+ADD COLUMN "wordPatterns" JSONB NOT NULL DEFAULT '[]',
+ADD COLUMN "wordFormation" JSONB NOT NULL DEFAULT '[]',
+ADD COLUMN "dependentPrepositions" JSONB NOT NULL DEFAULT '[]',
+ADD COLUMN "synonyms" JSONB NOT NULL DEFAULT '[]',
+ADD COLUMN "antonyms" JSONB NOT NULL DEFAULT '[]',
+ADD COLUMN "relatedVocabulary" JSONB NOT NULL DEFAULT '[]',
+ADD COLUMN "conversations" JSONB NOT NULL DEFAULT '[]';

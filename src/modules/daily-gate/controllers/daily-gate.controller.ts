@@ -1,9 +1,13 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
+  Param,
+  ParseIntPipe,
   Post,
+  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -11,6 +15,7 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard.js';
 import { SubmitLearnDto } from '../dto/submit-learn.dto.js';
 import { SubmitPracticeDto } from '../dto/submit-practice.dto.js';
 import { SubmitTestDto } from '../dto/submit-test.dto.js';
+import { AddWordEntryDto, SetWordMarkDto } from '../dto/word-entry.dto.js';
 import { DailyGateService } from '../services/daily-gate.service.js';
 
 type AuthedRequest = { user: { sub: string } };
@@ -28,6 +33,24 @@ export class DailyGateController {
   @Get('learn')
   learn(@Req() req: AuthedRequest) {
     return this.dailyGate.getLearn(req.user.sub);
+  }
+
+  @Post('learn/entries')
+  addEntry(@Req() req: AuthedRequest, @Body() dto: AddWordEntryDto) {
+    return this.dailyGate.addEntry(req.user.sub, dto);
+  }
+
+  @Delete('learn/entries/:id')
+  removeEntry(
+    @Req() req: AuthedRequest,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.dailyGate.removeEntry(req.user.sub, id);
+  }
+
+  @Put('learn/marks')
+  setMark(@Req() req: AuthedRequest, @Body() dto: SetWordMarkDto) {
+    return this.dailyGate.setMark(req.user.sub, dto);
   }
 
   @Post('learn/complete')

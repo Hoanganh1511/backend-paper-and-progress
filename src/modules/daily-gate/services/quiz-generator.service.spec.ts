@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import type { VocabularyWord } from '@prisma/client';
 import { SECTIONS, UNITS } from '../../../../prisma/seeds/vocabulary-data.ts';
 import {
   QuizGeneratorService,
+  type QuizWord,
   blankOut,
   firstForm,
   hashSeed,
 } from './quiz-generator.service.js';
 
 // The real word lists, as the database rows they become.
-const words: VocabularyWord[] = UNITS.flatMap((unit) =>
+const words: QuizWord[] = UNITS.flatMap((unit) =>
   SECTIONS.flatMap((section) =>
     unit.sections[section].map((entry) => ({
       section,
@@ -20,7 +20,6 @@ const words: VocabularyWord[] = UNITS.flatMap((unit) =>
       forms: entry.forms ?? null,
       pattern: entry.pattern ?? null,
       unitId: unit.unitNumber,
-      createdAt: new Date(0),
     })),
   ),
 ).map((word, index) => ({ ...word, id: index + 1 }));

@@ -30,6 +30,10 @@ model User {
   todos            Todo[]
   dailyProgress    UserDailyProgress[]
   wordReviews      WordReview[]
+  wordEntries      WordEntry[]
+  wordMarks        WordMark[]
+  certificates     Certificate[]
+  studyLists       StudyList[]
   phrases          Phrase[]
   phraseActivity   PhraseActivityDay[]
   articles         Article[]
@@ -264,6 +268,15 @@ model ProjectActivity {
 // ═══════ Daily English Gate ═══════
 // Khoá platform cho tới khi user qua bài từ vựng hằng ngày (B2 Destination)
 
+enum CefrLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+
 enum VocabSection {
   TOPIC_CONTRAST
   PHRASAL_VERB
@@ -298,10 +311,32 @@ model VocabularyWord {
   forms     String? // các dạng từ (WORD_FORMATION): "arrival (noun)"
   pattern   String? // word pattern: "afraid of sth/doing; afraid to do"
   createdAt DateTime     @default(now())
+  updatedAt DateTime     @default(now()) @updatedAt
+
+  // Nội dung do admin soạn trong màn "Từ vựng" (meaning ở trên là Short Definition).
+  pronunciation String?
+  partsOfSpeech String[]   @default([])
+  level         CefrLevel?
+  topics        String[]   @default([])
+  meaningVi     String? // nghĩa tiếng Việt
+
+  // Mười nhóm học, mỗi nhóm là một mảng các mục có thứ tự (xem src/modules/vocabulary-admin).
+  wordFamily            Json @default("[]")
+  collocations          Json @default("[]")
+  phrasalVerbs          Json @default("[]")
+  wordPatterns          Json @default("[]")
+  wordFormation         Json @default("[]")
+  dependentPrepositions Json @default("[]")
+  synonyms              Json @default("[]")
+  antonyms              Json @default("[]")
+  relatedVocabulary     Json @default("[]")
+  conversations         Json @default("[]")
 
   unit    VocabularyUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
   reviews WordReview[]
   phrases Phrase[]
+  entries WordEntry[]
+  marks   WordMark[]
 
   @@index([unitId, section])
 }
@@ -315,6 +350,8 @@ model DailyLesson {
   createdAt DateTime   @default(now())
 
   progresses UserDailyProgress[]
+  entries    WordEntry[]
+  marks      WordMark[]
 }
 
 model UserDailyProgress {
@@ -503,15 +540,16 @@ model Article {
   updatedAt      DateTime          @updatedAt
   // searchVector (tsvector, generated) nằm trong migration SQL, Prisma không biết cột này.
 
-  author    User              @relation(fields: [authorId], references: [id])
-  series    Series?           @relation(fields: [seriesId], references: [id], onDelete: SetNull)
-  tags      ArticleTag[]
-  topics    ArticleTopic[]
-  comments  Comment[]
-  reactions Reaction[]
-  bookmarks Bookmark[]
-  revisions ArticleRevision[]
-  views     ArticleView[]
+  author     User              @relation(fields: [authorId], references: [id])
+  series     Series?           @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  tags       ArticleTag[]
+  topics     ArticleTopic[]
+  comments   Comment[]
+  reactions  Reaction[]
+  bookmarks  Bookmark[]
+  revisions  ArticleRevision[]
+  views      ArticleView[]
+  studySteps StudyStep[]
 
   @@index([status, publishedAt])
   @@index([authorId])
@@ -854,4 +892,157 @@ model MembershipOrder {
 
   @@index([userId, status])
   @@index([status, createdAt])
+}
+
+enum WordEntryKind {
+  SENTENCE
+  COLLOCATION
+  RELATED
+  WORD_FAMILY
+  PHRASAL_VERB
+  WORD_PATTERN
+  WORD_FORMATION
+  DEPENDENT_PREPOSITION
+  SYNONYM
+  ANTONYM
+  CONVERSATION
+}
+
+/// Thứ người học tự viết cho một từ trong bài Daily English: câu ví dụ, cụm từ đi kèm
+/// (collocation) hoặc từ liên quan. Đủ 5 câu ví dụ/từ thì từ đó tính là đã học.
+model WordEntry {
+  id        Int           @id @default(autoincrement())
+  userId    String
+  lessonId  Int
+  wordId    Int
+  kind      WordEntryKind @default(SENTENCE)
+  text      String
+  createdAt DateTime      @default(now())
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson DailyLesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  word   VocabularyWord @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@index([userId, lessonId])
+}
+
+enum WordMarkType {
+  KNOWN
+  REVIEW
+}
+
+/// "Đã biết" hoặc "Cần ôn lại" mà người học đánh dấu cho một từ. Đã biết thì từ đó tính là đã học.
+model WordMark {
+  id       Int          @id @default(autoincrement())
+  userId   String
+  lessonId Int
+  wordId   Int
+  mark     WordMarkType
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson DailyLesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  word   VocabularyWord @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId, wordId])
+}
+
+enum CertificateStatus {
+  ACHIEVED
+  STUDYING
+  PLANNED
+}
+
+/// Chứng chỉ của người dùng: đã đạt, đang học hoặc dự định học.
+model Certificate {
+  id           String            @id @default(uuid())
+  userId       String
+  name         String
+  issuer       String
+  status       CertificateStatus
+  /// Link ảnh chứng chỉ (người dùng tự điền khi có).
+  imageUrl     String?
+  credentialId String?
+  verifyUrl    String?
+  /// Điểm hoặc xếp loại, ví dụ "920/990".
+  score        String?
+  issuedAt     DateTime?         @db.Date
+  expiresAt    DateTime?         @db.Date
+  /// Ngày bắt đầu học (đang học) hoặc dự kiến bắt đầu (kế hoạch).
+  startDate    DateTime?         @db.Date
+  /// Ngày dự kiến hoàn thành.
+  targetDate   DateTime?         @db.Date
+  /// Tiến độ nhập tay; khi đã có bước trong lộ trình thì tính từ các bước.
+  progress     Int               @default(0)
+  notes        String?           @db.Text
+  /// Danh sách học (lộ trình tự soạn) gắn với chứng chỉ này.
+  studyListId  String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studyList StudyList?            @relation(fields: [studyListId], references: [id], onDelete: SetNull)
+  resources CertificateResource[]
+
+  @@index([userId, status])
+}
+
+/// Danh sách học: lộ trình do người dùng tự soạn (phần -> bước), có thể gắn với chứng chỉ.
+model StudyList {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sections     StudySection[]
+  certificates Certificate[]
+
+  @@index([userId])
+}
+
+/// Một phần (giai đoạn) trong danh sách học.
+model StudySection {
+  id          String  @id @default(uuid())
+  studyListId String
+  order       Int
+  title       String
+  description String?
+
+  studyList StudyList   @relation(fields: [studyListId], references: [id], onDelete: Cascade)
+  steps     StudyStep[]
+
+  @@index([studyListId, order])
+}
+
+model StudyStep {
+  id        String    @id @default(uuid())
+  sectionId String
+  order     Int
+  title     String
+  note      String?
+  url       String?
+  isDone    Boolean   @default(false)
+  doneAt    DateTime?
+  /// Bước này là một bài viết có trên site; bài bị xoá thì bước vẫn còn, chỉ mất liên kết.
+  articleId String?
+
+  section StudySection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  article Article?     @relation(fields: [articleId], references: [id], onDelete: SetNull)
+
+  @@index([sectionId, order])
+  @@index([articleId])
+}
+
+model CertificateResource {
+  id            String   @id @default(uuid())
+  certificateId String
+  title         String
+  url           String
+  createdAt     DateTime @default(now())
+
+  certificate Certificate @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+
+  @@index([certificateId])
 }
