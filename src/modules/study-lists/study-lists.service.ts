@@ -25,6 +25,7 @@ const ARTICLE_SELECT = {
   title: true,
   status: true,
   readingMinutes: true,
+  publishedAt: true,
 } as const;
 
 // undefined = unchanged, ""/null = cleared
