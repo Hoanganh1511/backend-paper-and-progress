@@ -37,6 +37,10 @@ export const createArticleSchema = z.object(fields);
 export const updateArticleSchema = z.object(fields).partial().extend({
   /** Auto-save sends this so a quick burst of saves does not fill the history. */
   isAutosave: z.boolean().optional(),
+  /** The `version` the editor loaded or last saved; a different one stored means a conflict (409). */
+  baseVersion: z.string().max(64).optional(),
+  /** Save even if the article changed elsewhere: the writer chose their copy. */
+  force: z.boolean().optional(),
 });
 
 export const publishArticleSchema = z.object({

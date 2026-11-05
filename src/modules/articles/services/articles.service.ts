@@ -1,5 +1,7 @@
+import { createHash } from 'node:crypto';
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -25,6 +27,30 @@ export interface Viewer {
 }
 
 const LIST_TTL_SECONDS = 60;
+
+/**
+ * A short fingerprint of what the editor works on. The editor sends the one it
+ * loaded; a different one on save means the article was changed somewhere else
+ * (another tab, another computer). Views and other counters are not part of it.
+ */
+export function articleVersion(article: {
+  title: string;
+  excerpt: string | null;
+  coverImageUrl: string | null;
+  contentHtml: string;
+}): string {
+  return createHash('sha1')
+    .update(
+      JSON.stringify([
+        article.title,
+        article.excerpt,
+        article.coverImageUrl,
+        article.contentHtml,
+      ]),
+    )
+    .digest('hex')
+    .slice(0, 16);
+}
 
 /** Slugs the web app uses for its own pages under /articles. */
 const RESERVED_SLUGS = new Set(['new', 'saved', 'mine', 'tags', 'series']);
@@ -294,7 +320,11 @@ export class ArticlesService {
           updatedAt: true,
         },
       })
-      .then((row) => ({ ...toCard(row), authorId: article.authorId }));
+      .then((row) => ({
+        ...toCard(row),
+        authorId: article.authorId,
+        version: articleVersion(row),
+      }));
   }
 
   private async findManaged(viewer: Viewer, id: string) {
@@ -403,7 +433,15 @@ export class ArticlesService {
       contentHtml: processed.html,
       contentText: processed.text,
     });
-    return created;
+    return {
+      ...created,
+      version: articleVersion({
+        title: dto.title,
+        excerpt: dto.excerpt || null,
+        coverImageUrl: dto.coverImageUrl || null,
+        contentHtml: processed.html,
+      }),
+    };
   }
 
   async update(viewer: Viewer, id: string, dto: UpdateArticleInput) {
@@ -420,6 +458,32 @@ export class ArticlesService {
     const processed = hasContent
       ? this.content.process(dto.contentHtml as string)
       : undefined;
+
+    // What the article will hold after this save, as the editor sees it.
+    const next = {
+      title: dto.title ?? article.title,
+      excerpt:
+        dto.excerpt !== undefined ? dto.excerpt || null : article.excerpt,
+      coverImageUrl:
+        dto.coverImageUrl !== undefined
+          ? dto.coverImageUrl || null
+          : article.coverImageUrl,
+      contentHtml: processed?.html ?? article.contentHtml,
+    };
+    // The editor was opened on another version: saving would overwrite what was
+    // written elsewhere. The same content arriving again (a retry after a lost
+    // response) is not a conflict, and `force` is the writer choosing their copy.
+    if (dto.baseVersion && !dto.force) {
+      const current = articleVersion(article);
+      if (dto.baseVersion !== current && articleVersion(next) !== current) {
+        throw new ConflictException({
+          statusCode: 409,
+          code: 'ARTICLE_CONFLICT',
+          message:
+            'Bài viết này đã được sửa ở nơi khác (tab hoặc máy khác). Bản của bạn chưa được lưu để tránh ghi đè.',
+        });
+      }
+    }
 
     // A published slug never changes by itself; only when the author asks.
     const slug =
@@ -486,7 +550,7 @@ export class ArticlesService {
     if (updated.status === 'PUBLISHED' || article.status === 'PUBLISHED') {
       await this.refresh(article.slug, updated.slug);
     }
-    return updated;
+    return { ...updated, version: articleVersion(next) };
   }
 
   /** PUBLISHED now, or SCHEDULED when `scheduledAt` is still in the future. */

@@ -1,11 +1,16 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
-import { ArticlesService, type Viewer } from './articles.service.js';
+import {
+  ArticlesService,
+  articleVersion,
+  type Viewer,
+} from './articles.service.js';
 import { ContentService } from './content.service.js';
 
 const content = new ContentService({ get: () => undefined } as never);
@@ -360,5 +365,87 @@ describe('ArticlesService: topics, type and duplicate', () => {
       ForbiddenException,
     );
     expect(prisma.article.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('ArticlesService.update: saving over a version changed elsewhere', () => {
+  const stored = article({ coverImageUrl: null, status: 'DRAFT' });
+  const edit = {
+    title: 'Hello',
+    contentHtml: '<p>mine</p>',
+    contentJson: { type: 'doc' },
+  };
+
+  it('saves when the editor holds the stored version, and returns the new one', async () => {
+    const { service, prisma } = setup(stored);
+    prisma.article.update.mockResolvedValue({
+      id: 'a1',
+      slug: 'hello',
+      status: 'DRAFT',
+    });
+    const result = await service.update(author, 'a1', {
+      ...edit,
+      baseVersion: articleVersion(stored as never),
+    });
+    expect(prisma.article.update).toHaveBeenCalled();
+    expect(result.version).toBe(
+      articleVersion({
+        title: 'Hello',
+        excerpt: 'Short',
+        coverImageUrl: null,
+        contentHtml: '<p>mine</p>',
+      }),
+    );
+  });
+
+  it('refuses with a 409 instead of overwriting when the stored version moved on', async () => {
+    const { service, prisma, revisions } = setup(stored);
+    await expect(
+      service.update(author, 'a1', { ...edit, baseVersion: 'old-version' }),
+    ).rejects.toThrow(ConflictException);
+    expect(prisma.article.update).not.toHaveBeenCalled();
+    expect(revisions.record).not.toHaveBeenCalled();
+  });
+
+  it('lets the writer overwrite on purpose with force', async () => {
+    const { service, prisma } = setup(stored);
+    prisma.article.update.mockResolvedValue({
+      id: 'a1',
+      slug: 'hello',
+      status: 'DRAFT',
+    });
+    await service.update(author, 'a1', {
+      ...edit,
+      baseVersion: 'old-version',
+      force: true,
+    });
+    expect(prisma.article.update).toHaveBeenCalled();
+  });
+
+  it('is not a conflict when the same content arrives again (a retry after a lost response)', async () => {
+    const saved = article({
+      coverImageUrl: null,
+      status: 'DRAFT',
+      contentHtml: '<p>mine</p>',
+    });
+    const { service, prisma } = setup(saved);
+    prisma.article.update.mockResolvedValue({
+      id: 'a1',
+      slug: 'hello',
+      status: 'DRAFT',
+    });
+    await service.update(author, 'a1', { ...edit, baseVersion: 'older' });
+    expect(prisma.article.update).toHaveBeenCalled();
+  });
+
+  it('still saves when the client sends no version (older clients)', async () => {
+    const { service, prisma } = setup(stored);
+    prisma.article.update.mockResolvedValue({
+      id: 'a1',
+      slug: 'hello',
+      status: 'DRAFT',
+    });
+    await service.update(author, 'a1', edit);
+    expect(prisma.article.update).toHaveBeenCalled();
   });
 });
